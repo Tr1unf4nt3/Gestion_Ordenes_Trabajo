@@ -267,9 +267,8 @@
     <script>
         // *** 1. CONFIGURACIÓN FIREBASE Y VARIABLES GLOBALES ***
         
-        // ** CONFIGURACIÓN DE FIREBASE **
+        // ** CONFIGURACIÓN DE FIREBASE ACTUALIZADA **
         const firebaseConfig = {
-          // *** CLAVE API ACTUALIZADA CON EL VALOR PROPORCIONADO POR EL USUARIO ***
           apiKey: "AIzaSyC40g7AnTbn2mtamOx_siPhckajgNCjZmg",
           authDomain: "gestionordenestrabajo.firebaseapp.com",
           projectId: "gestionordenestrabajo",
@@ -1217,13 +1216,17 @@
                 // 8. Guardar la nueva estructura/contador
                 await saveFormStructure(true); 
 
-                // 9. Generar PDF
-                generatePDF(orderData);
+                // 9. Generar PDF - CORREGIDO
+                console.log('Generando PDF para nueva orden...');
+                await generatePDF(orderData);
+                console.log('PDF generado exitosamente');
 
                 // 10. Reiniciar UI
                 form.reset();
                 renderWorkOrderForm(); 
                 renderOrdersTable(); 
+                
+                alert('✅ Orden de Trabajo creada exitosamente y PDF generado.');
                 
             } catch (e) {
                 console.error("Error al crear la orden:", e);
@@ -1231,9 +1234,9 @@
             }
         }
 
-        // *** 6. GENERACIÓN DE PDF Y VISUALIZACIÓN DE ÓRDENES ***
+        // *** 6. GENERACIÓN DE PDF CORREGIDA ***
 
-        // *** NUEVA FUNCIÓN: Formatear texto largo para PDF ***
+        // *** FUNCIÓN: Formatear texto largo para PDF ***
         function formatLongTextForPDF(text, maxLineLength = 80) {
             if (!text || text === 'N/A') return 'N/A';
             
@@ -1265,168 +1268,195 @@
         }
 
         function generatePDF(data) {
-            const otNumber = data['Orden de Trabajo'];
-            const creationDate = data['Fecha Actual'] || 'N/A';
-            const fileName = `Orden_Trabajo_${otNumber}_${creationDate.replace(/\//g, '-')}.pdf`;
-            
-            const secondaryHeader = `Orden de Trabajo Nro. ${otNumber}`;
-            
-            let formContentHTML = `
-                <div style="font-family: 'Arial', sans-serif; padding: 20px; color: #36454F; line-height: 1.4;">
-                    <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px;">${data['Título del Formulario']} Nro. ${otNumber}</h1>
+            return new Promise((resolve, reject) => {
+                try {
+                    const otNumber = data['Orden de Trabajo'];
+                    const creationDate = data['Fecha Actual'] || 'N/A';
+                    const fileName = `Orden_Trabajo_${otNumber}_${creationDate.replace(/\//g, '-')}.pdf`;
                     
-                    <div style="text-align: right; margin-bottom: 25px; font-weight: bold; color: #555;">
-                        Fecha de Emisión: ${data['Fecha Actual']}
-                    </div>
-            `;
+                    console.log('Iniciando generación de PDF para orden:', otNumber);
 
-            // Contenido del Formulario por Secciones (Dinámicas)
-            formStructure.forEach((section, secIndex) => {
-                
-                formContentHTML += `<div style="page-break-inside: avoid; margin-bottom: 25px;">`;
-                formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${section.title}</h3>`;
-                formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
-                
-                section.fields.forEach(field => {
-                    const label = field.label;
-                    let value = data[label] || 'N/A';
-                    
-                    // OMITIR CAMPOS DEL ENCABEZADO
-                    if (label === 'Título del Formulario' || label === 'Orden de Trabajo' || label === 'Fecha Actual') return;
-                    
-                    // APLICAR FORMATO DE FECHA
-                    const fieldDefinition = section.fields.find(f => f.label === label);
-                    if (fieldDefinition && fieldDefinition.type === 'date-input' && value !== 'N/A') {
-                        value = formatDateToDDMMYYYY(value);
-                    }
-                    
-                    // DETECTAR CAMPOS DE TEXTO LARGO
-                    const isLongText = field.type === 'textarea' || 
-                                      /descripción|descripcion|detallada|detallado|observación|observacion|comentario|notas|detalle/i.test(label);
-                    
-                    let valueCellStyle = "padding: 10px 8px; vertical-align: top;";
-                    let labelCellStyle = "padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%;";
-                    
-                    if (isLongText) {
-                        valueCellStyle += " word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 50px;";
-                        // Formatear texto largo
-                        value = formatLongTextForPDF(value);
-                    }
-
-                    formContentHTML += `
-                        <tr style="border-bottom: 1px solid #B0C4DE;">
-                            <td style="${labelCellStyle}">${label}:</td>
-                            <td style="${valueCellStyle} width: 65%;">${value}</td>
-                        </tr>
+                    let formContentHTML = `
+                        <div style="font-family: 'Arial', sans-serif; padding: 20px; color: #36454F; line-height: 1.4;">
+                            <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px;">${data['Título del Formulario']} Nro. ${otNumber}</h1>
+                            
+                            <div style="text-align: right; margin-bottom: 25px; font-weight: bold; color: #555;">
+                                Fecha de Emisión: ${data['Fecha Actual']}
+                            </div>
                     `;
-                });
-                
-                formContentHTML += '</table></div>';
-            });
-            
-            // Contenido de las Secciones Condicionales (Fijas)
-            const type = data['Tipo de Construcción Seleccionada'];
-            if (type && type !== 'Ninguno') {
-                const prefix = type.includes('Nodo') ? 'node_acceso' : 'isp';
-                
-                const pagoVgtCANTV = data[`${prefix} | Pago x VGT CANTV a cargo de Inter`] || '0.00';
-                const pagoVgtEDC = data[`${prefix} | Pago x VGT EDC a cargo de Inter`] || '0.00'; 
-                
-                const descripcionFormateada = formatLongTextForPDF(data[`${prefix} | Descripción`]);
 
-                formContentHTML += `<div style="page-break-inside: avoid; margin-bottom: 25px;">`;
-                formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${type}</h3>`;
-                formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
+                    // Contenido del Formulario por Secciones (Dinámicas)
+                    formStructure.forEach((section, secIndex) => {
+                        
+                        formContentHTML += `<div style="page-break-inside: avoid; margin-bottom: 25px;">`;
+                        formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${section.title}</h3>`;
+                        formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
+                        
+                        section.fields.forEach(field => {
+                            const label = field.label;
+                            let value = data[label] || 'N/A';
+                            
+                            // OMITIR CAMPOS DEL ENCABEZADO
+                            if (label === 'Título del Formulario' || label === 'Orden de Trabajo' || label === 'Fecha Actual') return;
+                            
+                            // APLICAR FORMATO DE FECHA
+                            const fieldDefinition = section.fields.find(f => f.label === label);
+                            if (fieldDefinition && fieldDefinition.type === 'date-input' && value !== 'N/A') {
+                                value = formatDateToDDMMYYYY(value);
+                            }
+                            
+                            // DETECTAR CAMPOS DE TEXTO LARGO
+                            const isLongText = field.type === 'textarea' || 
+                                              /descripción|descripcion|detallada|detallado|observación|observacion|comentario|notas|detalle/i.test(label);
+                            
+                            let valueCellStyle = "padding: 10px 8px; vertical-align: top;";
+                            let labelCellStyle = "padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%;";
+                            
+                            if (isLongText) {
+                                valueCellStyle += " word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 50px;";
+                                value = formatLongTextForPDF(value);
+                            }
 
-                formContentHTML += `
-                    <tr style="border-bottom: 1px solid #B0C4DE;">
-                        <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%;">Costo Proyectado de la Obra:</td>
-                        <td style="padding: 10px 8px; width: 65%;">${data[`${prefix} | Costo Proyectado de la Obra`]}</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #B0C4DE;">
-                        <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Pago realizado por:</td>
-                        <td style="padding: 10px 8px;">${data[`${prefix} | Pago realizado por`]}</td>
-                    </tr>
+                            formContentHTML += `
+                                <tr style="border-bottom: 1px solid #B0C4DE;">
+                                    <td style="${labelCellStyle}">${label}:</td>
+                                    <td style="${valueCellStyle} width: 65%;">${value}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        formContentHTML += '</table></div>';
+                    });
                     
-                    <tr style="border-bottom: 1px solid #B0C4DE; background-color: #e0f7fa;">
-                        <td style="padding: 12px 8px; font-weight: bold;">Pago x VGT CANTV a cargo de Inter:</td>
-                        <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6;">${pagoVgtCANTV}</td>
-                    </tr>
-                    
-                    <tr style="border-bottom: 1px solid #B0C4DE; background-color: #e0f7fa;">
-                        <td style="padding: 12px 8px; font-weight: bold;">Pago x VGT EDC a cargo de Inter:</td>
-                        <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6;">${pagoVgtEDC}</td>
-                    </tr>
-                    
-                    <tr style="border-bottom: 1px solid #B0C4DE;">
-                        <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Descripción:</td>
-                        <td style="padding: 10px 8px; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 80px;">${descripcionFormateada}</td>
-                    </tr>
-                    
-                    <tr>
-                        <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Abono Mensual a Recibir por el cliente:</td>
-                        <td style="padding: 10px 8px;">${data[`${prefix} | Abono Mensual a Recibir por el cliente`]}</td>
-                    </tr>
-                `;
+                    // Contenido de las Secciones Condicionales (Fijas)
+                    const type = data['Tipo de Construcción Seleccionada'];
+                    if (type && type !== 'Ninguno') {
+                        const prefix = type.includes('Nodo') ? 'node_acceso' : 'isp';
+                        
+                        const pagoVgtCANTV = data[`${prefix} | Pago x VGT CANTV a cargo de Inter`] || '0.00';
+                        const pagoVgtEDC = data[`${prefix} | Pago x VGT EDC a cargo de Inter`] || '0.00'; 
+                        
+                        const descripcionFormateada = formatLongTextForPDF(data[`${prefix} | Descripción`]);
 
-                formContentHTML += '</table></div>';
-            }
+                        formContentHTML += `<div style="page-break-inside: avoid; margin-bottom: 25px;">`;
+                        formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${type}</h3>`;
+                        formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
 
-            // SECCIÓN DE FIRMAS
-            formContentHTML += `
-                <div style="page-break-inside: avoid; margin-top: 60px; padding-top: 30px; border-top: 2px dashed #B0C4DE;">
-                    <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold;">
-                        <div style="width: 45%;">
-                            Firma Contratista:
-                            <div style="border-top: 1px solid #36454F; margin-top: 5px; padding-top: 30px;"></div>
+                        formContentHTML += `
+                            <tr style="border-bottom: 1px solid #B0C4DE;">
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%;">Costo Proyectado de la Obra:</td>
+                                <td style="padding: 10px 8px; width: 65%;">${data[`${prefix} | Costo Proyectado de la Obra`]}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #B0C4DE;">
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Pago realizado por:</td>
+                                <td style="padding: 10px 8px;">${data[`${prefix} | Pago realizado por`]}</td>
+                            </tr>
+                            
+                            <tr style="border-bottom: 1px solid #B0C4DE; background-color: #e0f7fa;">
+                                <td style="padding: 12px 8px; font-weight: bold;">Pago x VGT CANTV a cargo de Inter:</td>
+                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6;">${pagoVgtCANTV}</td>
+                            </tr>
+                            
+                            <tr style="border-bottom: 1px solid #B0C4DE; background-color: #e0f7fa;">
+                                <td style="padding: 12px 8px; font-weight: bold;">Pago x VGT EDC a cargo de Inter:</td>
+                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6;">${pagoVgtEDC}</td>
+                            </tr>
+                            
+                            <tr style="border-bottom: 1px solid #B0C4DE;">
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Descripción:</td>
+                                <td style="padding: 10px 8px; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 80px;">${descripcionFormateada}</td>
+                            </tr>
+                            
+                            <tr>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Abono Mensual a Recibir por el cliente:</td>
+                                <td style="padding: 10px 8px;">${data[`${prefix} | Abono Mensual a Recibir por el cliente`]}</td>
+                            </tr>
+                        `;
+
+                        formContentHTML += '</table></div>';
+                    }
+
+                    // SECCIÓN DE FIRMAS
+                    formContentHTML += `
+                        <div style="page-break-inside: avoid; margin-top: 60px; padding-top: 30px; border-top: 2px dashed #B0C4DE;">
+                            <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold;">
+                                <div style="width: 45%;">
+                                    Firma Contratista:
+                                    <div style="border-top: 1px solid #36454F; margin-top: 5px; padding-top: 30px;"></div>
+                                </div>
+                                <div style="width: 45%;">
+                                    Firma Responsable:
+                                    <div style="border-top: 1px solid #36454F; margin-top: 5px; padding-top: 30px;"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div style="width: 45%;">
-                            Firma Responsable:
-                            <div style="border-top: 1px solid #36454F; margin-top: 5px; padding-top: 30px;"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                    `;
 
-            formContentHTML += '</div>';
-            
-            const element = document.createElement('div');
-            element.innerHTML = formContentHTML;
-            
-            const opt = {
-                margin:       15, 
-                filename:     fileName,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { 
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true,
-                    width: element.scrollWidth
-                },
-                jsPDF:        { 
-                    unit: 'mm', 
-                    format: 'a4', 
-                    orientation: 'portrait',
-                    compress: true
+                    formContentHTML += '</div>';
+                    
+                    const element = document.createElement('div');
+                    element.innerHTML = formContentHTML;
+                    
+                    const opt = {
+                        margin:       15, 
+                        filename:     fileName,
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { 
+                            scale: 2,
+                            useCORS: true,
+                            letterRendering: true,
+                            width: element.scrollWidth
+                        },
+                        jsPDF:        { 
+                            unit: 'mm', 
+                            format: 'a4', 
+                            orientation: 'portrait',
+                            compress: true
+                        }
+                    };
+
+                    // *** CORRECCIÓN PRINCIPAL: Usar .save() con manejo de promesas ***
+                    html2pdf().set(opt).from(element).toPdf().get('pdf').then(function(pdf) {
+                        // Agregar número de página en páginas secundarias
+                        const totalPages = pdf.internal.getNumberOfPages();
+                        const secondaryHeader = `Orden de Trabajo Nro. ${otNumber}`;
+                        
+                        for (let i = 2; i <= totalPages; i++) {
+                            pdf.setPage(i);
+                            pdf.setFontSize(12); 
+                            pdf.setTextColor(85, 85, 85); 
+                            const x = pdf.internal.pageSize.getWidth() - 15; 
+                            const y = 10; 
+                            pdf.text(secondaryHeader, x, y, { align: 'right' });
+                        }
+                    }).save();
+
+                    console.log('PDF configurado para descarga:', fileName);
+                    resolve();
+                    
+                } catch (error) {
+                    console.error('Error en generatePDF:', error);
+                    reject(error);
                 }
-            };
-
-            // *** CORRECCIÓN: USAR .save() DIRECTAMENTE ***
-            html2pdf().set(opt).from(element).save();
+            });
         }
         
-        // *** CORRECCIÓN: FUNCIÓN downloadOrder MEJORADA ***
+        // *** FUNCIÓN downloadOrder CORREGIDA ***
         function downloadOrder(orderId) {
             console.log('Intentando descargar orden ID:', orderId);
-            console.log('Órdenes disponibles:', workOrders);
             
             const order = workOrders.find(o => o.id === orderId);
             if (order) {
-                console.log('Orden encontrada:', order);
-                generatePDF(order);
+                console.log('Orden encontrada, generando PDF...');
+                generatePDF(order).then(() => {
+                    console.log('PDF descargado exitosamente');
+                }).catch(error => {
+                    console.error('Error al generar PDF:', error);
+                    alert('Error al generar el PDF. Por favor, intente nuevamente.');
+                });
             } else {
                 console.error('Orden no encontrada con ID:', orderId);
-                alert('No se encontró la Orden de Trabajo para descargar. ID: ' + orderId);
+                alert('No se encontró la Orden de Trabajo para descargar.');
             }
         }
         
@@ -1609,5 +1639,4 @@
     </script>
 
 </body>
-
 </html>
