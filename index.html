@@ -1293,27 +1293,25 @@
                     
                     console.log('Iniciando generación de PDF para orden:', otNumber);
 
-                    // Crear un contenedor visible temporalmente
+                    // Crear un contenedor invisible pero en el DOM
                     const printContainer = document.createElement('div');
                     printContainer.id = 'pdf-print-container';
                     printContainer.style.cssText = `
-                        position: fixed;
+                        position: absolute;
+                        left: -9999px;
                         top: 0;
-                        left: 0;
                         width: 210mm;
                         min-height: 297mm;
                         background: white;
-                        padding: 20px;
-                        z-index: 10000;
+                        padding: 20mm;
                         font-family: Arial, sans-serif;
                         box-sizing: border-box;
-                        border: 1px solid #ccc;
-                        overflow: hidden;
+                        line-height: 1.4;
                     `;
 
                     // Construir el contenido HTML completo
                     let formContentHTML = `
-                        <div style="font-family: 'Arial', sans-serif; padding: 20px; color: #36454F; line-height: 1.4; width: 100%;">
+                        <div style="font-family: 'Arial', sans-serif; color: #36454F; line-height: 1.4; width: 100%;">
                             <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px;">${data['Título del Formulario']} Nro. ${otNumber}</h1>
                             
                             <div style="text-align: right; margin-bottom: 25px; font-weight: bold; color: #555;">
@@ -1324,7 +1322,7 @@
                     // Contenido del Formulario por Secciones (Dinámicas)
                     formStructure.forEach((section, secIndex) => {
                         
-                        formContentHTML += `<div style="page-break-inside: avoid; margin-bottom: 25px; width: 100%;">`;
+                        formContentHTML += `<div style="margin-bottom: 25px; width: 100%;">`;
                         formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${section.title}</h3>`;
                         formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
                         
@@ -1374,7 +1372,7 @@
                         
                         const descripcionFormateada = formatLongTextForPDF(data[`${prefix} | Descripción`]);
 
-                        formContentHTML += `<div style="page-break-inside: avoid; margin-bottom: 25px; width: 100%;">`;
+                        formContentHTML += `<div style="margin-bottom: 25px; width: 100%;">`;
                         formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${type}</h3>`;
                         formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
 
@@ -1414,7 +1412,7 @@
 
                     // SECCIÓN DE FIRMAS
                     formContentHTML += `
-                        <div style="page-break-inside: avoid; margin-top: 60px; padding-top: 30px; border-top: 2px dashed #B0C4DE; width: 100%;">
+                        <div style="margin-top: 60px; padding-top: 30px; border-top: 2px dashed #B0C4DE; width: 100%;">
                             <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold; width: 100%;">
                                 <div style="width: 45%;">
                                     Firma Contratista:
@@ -1448,11 +1446,9 @@
                         html2canvas:  { 
                             scale: 2,
                             useCORS: true,
-                            logging: true,
+                            logging: false,
                             scrollX: 0,
-                            scrollY: 0,
-                            windowWidth: printContainer.scrollWidth,
-                            windowHeight: printContainer.scrollHeight
+                            scrollY: 0
                         },
                         jsPDF:        { 
                             unit: 'mm', 
@@ -1462,9 +1458,9 @@
                         }
                     };
 
-                    // Esperar un momento para que el DOM se actualice completamente
+                    // Usar setTimeout para asegurar que el DOM se haya actualizado
                     setTimeout(() => {
-                        console.log('Generando PDF desde elemento visible...');
+                        console.log('Generando PDF desde elemento...');
                         
                         html2pdf()
                             .set(opt)
@@ -1486,7 +1482,7 @@
                                 }
                                 reject(error);
                             });
-                    }, 1000); // Dar más tiempo para el renderizado
+                    }, 500);
 
                 } catch (error) {
                     console.error('Error en generatePDF:', error);
