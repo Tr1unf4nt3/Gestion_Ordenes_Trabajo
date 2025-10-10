@@ -1293,6 +1293,25 @@
                     
                     console.log('Iniciando generación de PDF para orden:', otNumber);
 
+                    // Crear un contenedor visible temporalmente
+                    const printContainer = document.createElement('div');
+                    printContainer.id = 'pdf-print-container';
+                    printContainer.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 210mm;
+                        min-height: 297mm;
+                        background: white;
+                        padding: 20px;
+                        z-index: 10000;
+                        font-family: Arial, sans-serif;
+                        box-sizing: border-box;
+                        border: 1px solid #ccc;
+                        overflow: hidden;
+                    `;
+
+                    // Construir el contenido HTML completo
                     let formContentHTML = `
                         <div style="font-family: 'Arial', sans-serif; padding: 20px; color: #36454F; line-height: 1.4; width: 100%;">
                             <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px;">${data['Título del Formulario']} Nro. ${otNumber}</h1>
@@ -1326,8 +1345,8 @@
                             const isLongText = field.type === 'textarea' || 
                                               /descripción|descripcion|detallada|detallado|observación|observacion|comentario|notas|detalle/i.test(label);
                             
-                            let valueCellStyle = "padding: 10px 8px; vertical-align: top;";
-                            let labelCellStyle = "padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%;";
+                            let valueCellStyle = "padding: 10px 8px; vertical-align: top; border: 1px solid #B0C4DE;";
+                            let labelCellStyle = "padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%; border: 1px solid #B0C4DE;";
                             
                             if (isLongText) {
                                 valueCellStyle += " word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 50px;";
@@ -1335,7 +1354,7 @@
                             }
 
                             formContentHTML += `
-                                <tr style="border-bottom: 1px solid #B0C4DE;">
+                                <tr>
                                     <td style="${labelCellStyle}">${label}:</td>
                                     <td style="${valueCellStyle} width: 65%;">${value}</td>
                                 </tr>
@@ -1360,33 +1379,33 @@
                         formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
 
                         formContentHTML += `
-                            <tr style="border-bottom: 1px solid #B0C4DE;">
-                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%;">Costo Proyectado de la Obra:</td>
-                                <td style="padding: 10px 8px; width: 65%;">${data[`${prefix} | Costo Proyectado de la Obra`]}</td>
+                            <tr>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%; border: 1px solid #B0C4DE;">Costo Proyectado de la Obra:</td>
+                                <td style="padding: 10px 8px; width: 65%; border: 1px solid #B0C4DE;">${data[`${prefix} | Costo Proyectado de la Obra`]}</td>
                             </tr>
-                            <tr style="border-bottom: 1px solid #B0C4DE;">
-                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Pago realizado por:</td>
-                                <td style="padding: 10px 8px;">${data[`${prefix} | Pago realizado por`]}</td>
-                            </tr>
-                            
-                            <tr style="border-bottom: 1px solid #B0C4DE; background-color: #e0f7fa;">
-                                <td style="padding: 12px 8px; font-weight: bold;">Pago x VGT CANTV a cargo de Inter:</td>
-                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6;">${pagoVgtCANTV}</td>
+                            <tr>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Pago realizado por:</td>
+                                <td style="padding: 10px 8px; border: 1px solid #B0C4DE;">${data[`${prefix} | Pago realizado por`]}</td>
                             </tr>
                             
-                            <tr style="border-bottom: 1px solid #B0C4DE; background-color: #e0f7fa;">
-                                <td style="padding: 12px 8px; font-weight: bold;">Pago x VGT EDC a cargo de Inter:</td>
-                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6;">${pagoVgtEDC}</td>
+                            <tr style="background-color: #e0f7fa;">
+                                <td style="padding: 12px 8px; font-weight: bold; border: 1px solid #B0C4DE;">Pago x VGT CANTV a cargo de Inter:</td>
+                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6; border: 1px solid #B0C4DE;">${pagoVgtCANTV}</td>
                             </tr>
                             
-                            <tr style="border-bottom: 1px solid #B0C4DE;">
-                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Descripción:</td>
-                                <td style="padding: 10px 8px; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 80px;">${descripcionFormateada}</td>
+                            <tr style="background-color: #e0f7fa;">
+                                <td style="padding: 12px 8px; font-weight: bold; border: 1px solid #B0C4DE;">Pago x VGT EDC a cargo de Inter:</td>
+                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6; border: 1px solid #B0C4DE;">${pagoVgtEDC}</td>
                             </tr>
                             
                             <tr>
-                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top;">Abono Mensual a Recibir por el cliente:</td>
-                                <td style="padding: 10px 8px;">${data[`${prefix} | Abono Mensual a Recibir por el cliente`]}</td>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Descripción:</td>
+                                <td style="padding: 10px 8px; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 80px; border: 1px solid #B0C4DE;">${descripcionFormateada}</td>
+                            </tr>
+                            
+                            <tr>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Abono Mensual a Recibir por el cliente:</td>
+                                <td style="padding: 10px 8px; border: 1px solid #B0C4DE;">${data[`${prefix} | Abono Mensual a Recibir por el cliente`]}</td>
                             </tr>
                         `;
 
@@ -1410,20 +1429,15 @@
                     `;
 
                     formContentHTML += '</div>';
+
+                    // Asignar el contenido al contenedor
+                    printContainer.innerHTML = formContentHTML;
                     
-                    // Crear elemento temporal y forzar el renderizado
-                    const element = document.createElement('div');
-                    element.style.width = '210mm'; // Ancho A4
-                    element.style.minHeight = '297mm'; // Alto A4 mínimo
-                    element.style.padding = '20px';
-                    element.style.boxSizing = 'border-box';
-                    element.innerHTML = formContentHTML;
-                    
-                    // Agregar temporalmente al DOM para calcular dimensiones
-                    element.style.position = 'absolute';
-                    element.style.left = '-9999px';
-                    document.body.appendChild(element);
-                    
+                    // Agregar al DOM para que se renderice
+                    document.body.appendChild(printContainer);
+
+                    console.log('Contenedor PDF creado y agregado al DOM');
+
                     const opt = {
                         margin:       10,
                         filename:     fileName,
@@ -1434,12 +1448,11 @@
                         html2canvas:  { 
                             scale: 2,
                             useCORS: true,
-                            letterRendering: true,
-                            width: element.scrollWidth,
-                            height: element.scrollHeight,
-                            windowWidth: element.scrollWidth,
-                            windowHeight: element.scrollHeight,
-                            logging: true
+                            logging: true,
+                            scrollX: 0,
+                            scrollY: 0,
+                            windowWidth: printContainer.scrollWidth,
+                            windowHeight: printContainer.scrollHeight
                         },
                         jsPDF:        { 
                             unit: 'mm', 
@@ -1449,35 +1462,39 @@
                         }
                     };
 
-                    console.log('Dimensiones del elemento:', {
-                        width: element.scrollWidth,
-                        height: element.scrollHeight,
-                        offsetWidth: element.offsetWidth,
-                        offsetHeight: element.offsetHeight
-                    });
-
-                    // *** CORRECCIÓN: Usar setTimeout para asegurar que el elemento se renderice ***
+                    // Esperar un momento para que el DOM se actualice completamente
                     setTimeout(() => {
+                        console.log('Generando PDF desde elemento visible...');
+                        
                         html2pdf()
                             .set(opt)
-                            .from(element)
+                            .from(printContainer)
                             .save()
                             .then(() => {
                                 console.log('PDF generado y descargado exitosamente:', fileName);
-                                // Limpiar elemento temporal
-                                document.body.removeChild(element);
+                                // Limpiar el contenedor temporal
+                                if (document.body.contains(printContainer)) {
+                                    document.body.removeChild(printContainer);
+                                }
                                 resolve();
                             })
                             .catch(error => {
                                 console.error('Error al generar PDF:', error);
-                                // Limpiar elemento temporal incluso en caso de error
-                                document.body.removeChild(element);
+                                // Limpiar el contenedor temporal incluso en error
+                                if (document.body.contains(printContainer)) {
+                                    document.body.removeChild(printContainer);
+                                }
                                 reject(error);
                             });
-                    }, 500); // Pequeño delay para asegurar el renderizado
-                    
+                    }, 1000); // Dar más tiempo para el renderizado
+
                 } catch (error) {
                     console.error('Error en generatePDF:', error);
+                    // Limpiar el contenedor temporal en caso de error
+                    const printContainer = document.getElementById('pdf-print-container');
+                    if (printContainer && document.body.contains(printContainer)) {
+                        document.body.removeChild(printContainer);
+                    }
                     reject(error);
                 }
             });
