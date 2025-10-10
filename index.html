@@ -1151,7 +1151,7 @@
             const caracasDate = getCurrentCaracasDate(); 
             const currentUserEmail = firebase.auth().currentUser ? firebase.auth().currentUser.email : 'ERROR'; // Obtener email
 
-            // 4. Recopilar datos estáticos y dinámicos del formulario principal
+            // 4. Recopilar datos estáticos y dinámicos del formulario principal - CORREGIDO
             formStructure.forEach(section => {
                 section.fields.forEach(field => {
                     let value;
@@ -1170,10 +1170,13 @@
                     }
                     
                     // Aplicar formato de fecha DD/MM/AAAA para todos los campos de fecha guardados
-                    if (field.type === 'date-input' && value) {
+                    // CORRECCIÓN: Verificar que value no sea null/undefined/string vacío
+                    if (field.type === 'date-input' && value && value.trim() !== '') {
                         orderData[field.label] = formatDateToDDMMYYYY(value);
                     } else {
-                        orderData[field.label] = sanitizeInput(value) || 'N/A';
+                        // CORRECCIÓN: Asegurar que siempre haya un valor válido
+                        const sanitizedValue = sanitizeInput(value);
+                        orderData[field.label] = (sanitizedValue && sanitizedValue.trim() !== '') ? sanitizedValue : 'N/A';
                     }
                 });
             });
@@ -1186,25 +1189,27 @@
                 
                 calculateNewTotal(prefix); 
 
-                orderData[`${prefix} | Costo Proyectado de la Obra`] = sanitizeInput(document.getElementById(`${prefix}_costo_proyectado`).value);
-                orderData[`${prefix} | Pago realizado por`] = sanitizeInput(document.getElementById(`${prefix}_pago_por_realizado`).value);
+                orderData[`${prefix} | Costo Proyectado de la Obra`] = sanitizeInput(document.getElementById(`${prefix}_costo_proyectado`).value) || 'N/A';
+                orderData[`${prefix} | Pago realizado por`] = sanitizeInput(document.getElementById(`${prefix}_pago_por_realizado`).value) || 'N/A';
                 
                 // Guardar ambos totales calculados
-                orderData[`${prefix} | Pago x VGT CANTV a cargo de Inter`] = formData.get(`${prefix}_total_hidden`);
-                orderData[`${prefix} | Pago x VGT EDC a cargo de Inter`] = formData.get(`${prefix}_total_hidden1`);
+                orderData[`${prefix} | Pago x VGT CANTV a cargo de Inter`] = formData.get(`${prefix}_total_hidden`) || '0.00';
+                orderData[`${prefix} | Pago x VGT EDC a cargo de Inter`] = formData.get(`${prefix}_total_hidden1`) || '0.00';
 
-                orderData[`${prefix} | Precio Unitario CANTV`] = parseFloat(document.getElementById(`${prefix}_precio_unitario`).value.replace(',', '.')).toFixed(2);
-                orderData[`${prefix} | Puntos CANTV`] = parseFloat(document.getElementById(`${prefix}_puntos`).value.replace(',', '.')).toFixed(0); 
+                orderData[`${prefix} | Precio Unitario CANTV`] = parseFloat(document.getElementById(`${prefix}_precio_unitario`).value.replace(',', '.')).toFixed(2) || '0.00';
+                orderData[`${prefix} | Puntos CANTV`] = parseFloat(document.getElementById(`${prefix}_puntos`).value.replace(',', '.')).toFixed(0) || '0'; 
                 
-                orderData[`${prefix} | Precio Unitario EDC`] = parseFloat(document.getElementById(`${prefix}_precio_unitario1`).value.replace(',', '.')).toFixed(2);
-                orderData[`${prefix} | Puntos EDC`] = parseFloat(document.getElementById(`${prefix}_puntos1`).value.replace(',', '.')).toFixed(0); 
+                orderData[`${prefix} | Precio Unitario EDC`] = parseFloat(document.getElementById(`${prefix}_precio_unitario1`).value.replace(',', '.')).toFixed(2) || '0.00';
+                orderData[`${prefix} | Puntos EDC`] = parseFloat(document.getElementById(`${prefix}_puntos1`).value.replace(',', '.')).toFixed(0) || '0'; 
 
-                orderData[`${prefix} | Descripción`] = sanitizeInput(document.getElementById(`${prefix}_descripcion`).value);
-                orderData[`${prefix} | Abono Mensual a Recibir por el cliente`] = sanitizeInput(document.getElementById(`${prefix}_abono_mensual`).value);
+                orderData[`${prefix} | Descripción`] = sanitizeInput(document.getElementById(`${prefix}_descripcion`).value) || 'N/A';
+                orderData[`${prefix} | Abono Mensual a Recibir por el cliente`] = sanitizeInput(document.getElementById(`${prefix}_abono_mensual`).value) || 'N/A';
             }
 
 
             // 6. **GUARDAR EN FIREBASE**
+            console.log("Datos a guardar en Firebase:", orderData); // Para debugging
+            
             try {
                 const docRef = await ORDERS_COLLECTION.add(orderData); 
                 
@@ -1230,7 +1235,19 @@
                 
             } catch (e) {
                 console.error("Error al crear la orden:", e);
-                alert("Error al guardar la orden de trabajo en Firebase. Verifique sus reglas de seguridad.");
+                console.error("Detalles completos del error:", e.message, e.stack);
+                
+                let errorMessage = "Error al guardar la orden de trabajo en Firebase. ";
+                
+                if (e.code === 'permission-denied') {
+                    errorMessage += "Error de permisos. Verifique las reglas de seguridad de Firestore.";
+                } else if (e.code === 'unavailable') {
+                    errorMessage += "Error de conexión. Verifique su conexión a internet.";
+                } else {
+                    errorMessage += `Detalles: ${e.message}`;
+                }
+                
+                alert(errorMessage);
             }
         }
 
