@@ -1415,24 +1415,19 @@
                         }
                     };
 
-                    // *** CORRECCIÓN PRINCIPAL: Usar .save() con manejo de promesas ***
-                    html2pdf().set(opt).from(element).toPdf().get('pdf').then(function(pdf) {
-                        // Agregar número de página en páginas secundarias
-                        const totalPages = pdf.internal.getNumberOfPages();
-                        const secondaryHeader = `Orden de Trabajo Nro. ${otNumber}`;
-                        
-                        for (let i = 2; i <= totalPages; i++) {
-                            pdf.setPage(i);
-                            pdf.setFontSize(12); 
-                            pdf.setTextColor(85, 85, 85); 
-                            const x = pdf.internal.pageSize.getWidth() - 15; 
-                            const y = 10; 
-                            pdf.text(secondaryHeader, x, y, { align: 'right' });
-                        }
-                    }).save();
-
-                    console.log('PDF configurado para descarga:', fileName);
-                    resolve();
+                    // *** CORRECCIÓN PRINCIPAL: Usar el método simple de html2pdf ***
+                    html2pdf()
+                        .set(opt)
+                        .from(element)
+                        .save()
+                        .then(() => {
+                            console.log('PDF generado y descargado exitosamente:', fileName);
+                            resolve();
+                        })
+                        .catch(error => {
+                            console.error('Error al generar PDF:', error);
+                            reject(error);
+                        });
                     
                 } catch (error) {
                     console.error('Error en generatePDF:', error);
