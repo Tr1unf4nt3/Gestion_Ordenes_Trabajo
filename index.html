@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Sistema de Órdenes de Trabajo | Firebase Cloud Edition (Seguro)</title>
-    <!-- Librería para generar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     
-    <!-- LIBRERÍAS DE FIREBASE (Versión de Compatibilidad) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore-compat.js"></script>
@@ -226,25 +224,19 @@
 
     <div id="main-app" class="container" style="display: none;">
         
-        <!-- Pestañas de Navegación -->
         <div class="tab">
-            <!-- ID AÑADIDO: new-order-tab-button -->
             <button class="tablinks" id="new-order-tab-button" onclick="openTab(event, 'new-order')">📋 Nueva Orden de Trabajo</button>
             <button class="tablinks" onclick="openTab(event, 'view-orders')">📂 Órdenes Creadas</button>
             <button class="tablinks" id="edit-tab-button" onclick="openTab(event, 'edit-form')" style="display: none;">⚙️ Edición de Formulario</button>
             <button onclick="logout()" style="float: right;">🚪 Cerrar Sesión</button>
         </div>
 
-        <!-- Contenido de las Pestañas -->
-
-        <!-- Pestaña 1: Creación de Orden de Trabajo -->
         <div id="new-order" class="tabcontent">
             <h3>Nueva Orden de Trabajo</h3>
             <form id="work-order-form"></form>
             <button onclick="generateWorkOrder()">✅ Crear Orden y Generar PDF</button>
         </div>
 
-        <!-- Pestaña 2: Visualización de Órdenes de Trabajo -->
         <div id="view-orders" class="tabcontent">
             <h3>Registro Histórico de Órdenes</h3>
             <table id="orders-table">
@@ -255,7 +247,6 @@
             </table>
         </div>
 
-        <!-- Pestaña 3: Edición de Formulario (Solo Administrador) -->
         <div id="edit-form" class="tabcontent">
             <h3>Edición de Formulario</h3>
             <div id="form-editor"></div>
@@ -780,21 +771,15 @@
         function getCurrentCaracasDate() {
             const now = new Date();
             // Usamos las opciones de formato y la zona horaria de Caracas para forzar la fecha GMT-4.
-            return now.toLocaleDateString('es-ES', { 
-                timeZone: 'America/Caracas',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+            return now.toLocaleDateString('es-ES', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit', year: 'numeric' });
         }
-        
+
         /**
          * Función que autocompleta los campos de Responsable y Rif al cambiar la empresa.
          */
         function autofillContratistaData(selectElement) {
             const selectedCompanyName = selectElement.value;
             const data = CONTRATISTAS_DATA[selectedCompanyName];
-            
             if (!data) {
                 document.getElementById('Apellido y Nombre del Responsable').value = '';
                 document.getElementById('Rif').value = '';
@@ -803,7 +788,7 @@
 
             const responsibleField = document.getElementById('Apellido y Nombre del Responsable');
             const rifField = document.getElementById('Rif');
-
+            
             if (responsibleField && data["Apellido y Nombre del Responsable"] !== undefined) {
                 responsibleField.value = data["Apellido y Nombre del Responsable"];
             }
@@ -811,26 +796,25 @@
                 rifField.value = data["Rif"];
             }
         }
-
+        
         // FUNCIÓN CORREGIDA: Ahora calcula correctamente ambos totales por separado
         function calculateNewTotal(prefix) {
             // Cálculo para CANTV
             const precioUnitario = parseFloat(document.getElementById(`${prefix}_precio_unitario`).value.replace(',', '.')) || 0;
             const puntos = parseFloat(document.getElementById(`${prefix}_puntos`).value.replace(',', '.')) || 0;
             const total = precioUnitario * puntos;
-            
+
             document.getElementById(`${prefix}_total_display`).textContent = total.toFixed(2);
             document.getElementById(`${prefix}_total_hidden`).value = total.toFixed(2);
-            
+
             // Cálculo para EDC (usando los campos con sufijo "1")
             const precioUnitario1 = parseFloat(document.getElementById(`${prefix}_precio_unitario1`).value.replace(',', '.')) || 0;
             const puntos1 = parseFloat(document.getElementById(`${prefix}_puntos1`).value.replace(',', '.')) || 0;
             const total1 = precioUnitario1 * puntos1;
-            
+
             document.getElementById(`${prefix}_total_display1`).textContent = total1.toFixed(2);
             document.getElementById(`${prefix}_total_hidden1`).value = total1.toFixed(2);
         }
-
 
         function toggleConditionalSection(type) {
             const nodeAccessSection = document.getElementById('conditional_node_acceso_section');
@@ -845,12 +829,11 @@
             ispButton.classList.remove('active');
             
             // 2. Resetear inputs y selecciones
-            
             const fieldsToReset = ['costo_proyectado', 'precio_unitario', 'puntos', 'precio_unitario1', 'puntos1', 'descripcion', 'abono_mensual'];
             const selectsToReset = ['pago_por_realizado'];
 
             ['node_acceso', 'isp'].forEach(prefix => {
-                fieldsToReset.forEach(field => {
+                 fieldsToReset.forEach(field => {
                     const el = document.getElementById(`${prefix}_${field}`);
                     if (el) el.value = '';
                 });
@@ -858,7 +841,7 @@
                     const el = document.getElementById(`${prefix}_${field}`);
                     if (el) el.value = 'Inter'; // Valor por defecto
                 });
-                
+
                 document.getElementById(`${prefix}_total_display`).textContent = '0.00';
                 document.getElementById(`${prefix}_total_display1`).textContent = '0.00';
                 document.getElementById(`${prefix}_total_hidden`).value = '0.00';
@@ -875,19 +858,19 @@
                 ispButton.classList.add('active');
             }
         }
-
-
+        
         function renderWorkOrderForm() {
             const formElement = document.getElementById('work-order-form');
             formElement.innerHTML = '';
-            const todayCaracas = getCurrentCaracasDate(); 
+            
+            const todayCaracas = getCurrentCaracasDate();
             const currentUserEmail = firebase.auth().currentUser ? firebase.auth().currentUser.email : 'USUARIO NO LOGUEADO'; // Obtener email
 
             if (!formStructure) {
-                 formElement.innerHTML = '<p>Cargando estructura del formulario...</p>';
-                 return;
+                formElement.innerHTML = '<p>Cargando estructura del formulario...</p>';
+                return;
             }
-            
+
             // Renderizar secciones dinámicas
             formStructure.forEach(section => {
                 const sectionDiv = document.createElement('div');
@@ -908,15 +891,13 @@
                             isDisabled = 'disabled';
                             isAutofillField = true;
                         } else if (field.type === 'autofill-select') {
-                            onChangeEvent = `onchange="autofillContratistaData(this)"`;
+                             onChangeEvent = `onchange="autofillContratistaData(this)"`;
                         }
                     }
-
-                    const fieldId = isAutofillField ? field.label : field.id; 
                     
+                    const fieldId = isAutofillField ? field.label : field.id;
                     const isFixedField = field.type === 'static' || field.type === 'ot_counter' || field.type === 'date-auto' || field.type === 'user-auto-fill';
                     const requiredAttribute = field.required && !isFixedField ? 'required' : '';
-
 
                     switch (field.type) {
                         case 'static':
@@ -934,7 +915,7 @@
                             break;
                         case 'date-auto':
                             value = todayCaracas;
-                            inputHTML = `<input type="text" value="${value}" disabled>`; 
+                            inputHTML = `<input type="text" value="${value}" disabled>`;
                             break;
                         case 'date-input':
                             inputHTML = `<input type="date" id="${fieldId}" name="${fieldId}" ${requiredAttribute} ${isDisabled}>`;
@@ -951,7 +932,7 @@
                                 ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
                             </select>`;
                             break;
-                        case 'autofill-select': 
+                        case 'autofill-select':
                             const optionsHTML = Object.keys(CONTRATISTAS_DATA).map(key => `<option value="${key}">${key}</option>`).join('');
                             inputHTML = `<select id="${fieldId}" name="${fieldId}" ${requiredAttribute} ${isDisabled} ${onChangeEvent}>
                                 ${optionsHTML}
@@ -961,9 +942,10 @@
 
                     sectionDiv.innerHTML += `<p><label for="${fieldId}">${field.label}${requiredStar}:</label>${inputHTML}</p>`;
                 });
+
                 formElement.appendChild(sectionDiv);
             });
-            
+
             // AÑADIR BOTONES DE CHECK CONDICIONAL AL FINAL
             formElement.innerHTML += `
                 <h4>Tipo de Construcción (Selección Única)</h4>
@@ -977,7 +959,7 @@
                     ❌ Eliminar / Desmarcar Selección
                 </button>
             `;
-            
+
             // --- SECCIÓN CONDICIONAL: CONSTRUCCIÓN NODO DE ACCESO ---
             formElement.innerHTML += renderConditionalSection('node_acceso', 'Datos Condicionales: La Construcción es de Nodo de Acceso');
 
@@ -986,7 +968,7 @@
             
             // Inicializar las secciones ocultas
             toggleConditionalSection(null);
-            
+
             // Inicializar autollenado con el valor por defecto
             const autofillSelects = document.querySelectorAll('select[onchange="autofillContratistaData(this)"]');
             autofillSelects.forEach(select => autofillContratistaData(select));
@@ -995,683 +977,544 @@
         // FUNCIÓN ACTUALIZADA: Ahora incluye títulos separados para CANTV y EDC
         function renderConditionalSection(prefix, title) {
             const onChangeFunc = `calculateNewTotal('${prefix}')`;
-            
+
+            // El campo de Abono Mensual solo existe para ISP
+            const abonoMensualField = prefix === 'isp' ? 
+                 `<p><label for="${prefix}_abono_mensual">Abono Mensual (*):</label> 
+                    <input type="number" step="0.01" min="0" id="${prefix}_abono_mensual" name="${prefix}_abono_mensual" required></p>` : '';
+
+
             return `
                 <div class="form-section" id="conditional_${prefix}_section" style="display: none;">
                     <h4>${title}</h4>
-                    
-                    <p><label for="${prefix}_costo_proyectado">Costo Proyectado de la Obra (*):</label>
+
+                    <p><label for="${prefix}_costo_proyectado">Costo Proyectado de la Obra (*):</label> 
                         <input type="text" id="${prefix}_costo_proyectado" name="${prefix}_costo_proyectado" required></p>
-                    
-                    <p><label for="${prefix}_pago_por_realizado">Pago realizado por (*):</label>
+
+                    <p><label for="${prefix}_pago_por_realizado">Pago realizado por (*):</label> 
                         <select id="${prefix}_pago_por_realizado" name="${prefix}_pago_por_realizado" required>
                             <option value="Inter">Inter</option>
                             <option value="Cliente">Cliente</option>
                         </select></p>
-                        
-                    <hr>
                     
-                    <!-- SECCIÓN CANTV -->
+                    ${abonoMensualField}
+
+                    <hr>
+
                     <h5>Pago x VGT CANTV</h5>
                     <div class="calculation-group">
-                        <label for="${prefix}_precio_unitario">Precio Unitario (*):</label>
-                        <input type="number" step="0.01" min="0" id="${prefix}_precio_unitario" name="${prefix}_precio_unitario" placeholder="0.00" oninput="${onChangeFunc}" class="calculation-input" required>
+                        <label for="${prefix}_precio_unitario" class="calculation-input">Precio Unitario:</label>
+                        <input type="number" step="0.01" min="0" id="${prefix}_precio_unitario" name="${prefix}_precio_unitario" oninput="${onChangeFunc}" class="calculation-input">
                         
                         <span class="formula-symbol">X</span>
-                        
-                        <label for="${prefix}_puntos">Puntos (*):</label>
-                        <input type="number" step="1" min="0" id="${prefix}_puntos" name="${prefix}_puntos" placeholder="0" oninput="${onChangeFunc}" class="calculation-input" required>
-                        
-                        <span class="formula-symbol">=</span>
+
+                        <label for="${prefix}_puntos" class="calculation-input">Puntos:</label>
+                        <input type="number" step="1" min="0" id="${prefix}_puntos" name="${prefix}_puntos" oninput="${onChangeFunc}" class="calculation-input">
                         
                         <div class="calculation-total-section">
-                            <label style="flex-basis: auto;">Pago x VGT CANTV a cargo de Inter (*):</label>
-                            <div id="${prefix}_total_display" class="total-display">0.00</div>
+                            <label>TOTAL CANTV:</label>
+                            <span id="${prefix}_total_display" class="total-display">0.00</span>
                             <input type="hidden" id="${prefix}_total_hidden" name="${prefix}_total_hidden" value="0.00">
                         </div>
                     </div>
                     
                     <hr>
-                    
-                    <!-- SECCIÓN EDC -->
+
                     <h5>Pago x VGT EDC</h5>
                     <div class="calculation-group">
-                        <label for="${prefix}_precio_unitario1">Precio Unitario (*):</label>
-                        <input type="number" step="0.01" min="0" id="${prefix}_precio_unitario1" name="${prefix}_precio_unitario1" placeholder="0.00" oninput="${onChangeFunc}" class="calculation-input" required>
+                        <label for="${prefix}_precio_unitario1" class="calculation-input">Precio Unitario:</label>
+                        <input type="number" step="0.01" min="0" id="${prefix}_precio_unitario1" name="${prefix}_precio_unitario1" oninput="${onChangeFunc}" class="calculation-input">
                         
                         <span class="formula-symbol">X</span>
-                        
-                        <label for="${prefix}_puntos1">Puntos (*):</label>
-                        <input type="number" step="1" min="0" id="${prefix}_puntos1" name="${prefix}_puntos1" placeholder="0" oninput="${onChangeFunc}" class="calculation-input" required>
-                        
-                        <span class="formula-symbol">=</span>
+
+                        <label for="${prefix}_puntos1" class="calculation-input">Puntos:</label>
+                        <input type="number" step="1" min="0" id="${prefix}_puntos1" name="${prefix}_puntos1" oninput="${onChangeFunc}" class="calculation-input">
                         
                         <div class="calculation-total-section">
-                            <label style="flex-basis: auto;">Pago x VGT EDC a cargo de Inter (*):</label>
-                            <div id="${prefix}_total_display1" class="total-display">0.00</div>
-                            <input type="hidden" id="${prefix}_total_hidden1" name="${prefix}_total_hidden1" value="0.00">
+                            <label>TOTAL EDC:</label>
+                            <span id="${prefix}_total_display1" class="total-display">0.00</span>
+                             <input type="hidden" id="${prefix}_total_hidden1" name="${prefix}_total_hidden1" value="0.00">
                         </div>
                     </div>
 
-                    <hr>
-
-                    <p><label for="${prefix}_descripcion">Descripción (*):</label>
-                        <textarea id="${prefix}_descripcion" name="${prefix}_descripcion" required style="min-height: 120px;"></textarea></p>
-                    
-                    <p><label for="${prefix}_abono_mensual">Abono Mensual a Recibir por el cliente (*):</label>
-                        <input type="text" id="${prefix}_abono_mensual" name="${prefix}_abono_mensual" required></p>
-                        
+                    <p><label for="${prefix}_descripcion">Descripción del Trabajo (*):</label> 
+                       <textarea id="${prefix}_descripcion" name="${prefix}_descripcion" required style="min-height: 150px;"></textarea></p>
                 </div>
             `;
         }
 
-        // SIN CAMBIOS
-        function sanitizeInput(str) {
-            if (typeof str !== 'string' || !str) return str;
-            return str.replace(/&/g, '&amp;')
-                      .replace(/</g, '&lt;')
-                      .replace(/>/g, '&gt;')
-                      .replace(/"/g, '&quot;')
-                      .replace(/'/g, '&#039;');
-        }
-
-
+        // FUNCIÓN CORREGIDA PARA DESCARGA DE PDF
+        /**
+         * Función principal para generar y guardar la Orden de Trabajo.
+         */
         async function generateWorkOrder() {
+            // 1. Obtener los datos del formulario
             const form = document.getElementById('work-order-form');
-            const selectedType = document.querySelector('.conditional-check.active');
-            let firstInvalidField = null;
-
-            // 1. VALIDACIÓN DE CAMPOS DINÁMICOS Y AUTOLENADOS 
-            for (const section of formStructure) {
-                for (const field of section.fields) {
-                    // user-auto-fill al listado de campos fijos
-                    const isFixed = field.type === 'static' || field.type === 'ot_counter' || field.type === 'date-auto' || field.type === 'user-auto-fill';
-                    
-                    if (!field.required || isFixed) continue;
-
-                    let fieldId = (section.title.includes('II. Información de la Contratista') && (field.label === 'Apellido y Nombre del Responsable' || field.label === 'Rif')) 
-                                ? field.label 
-                                : field.id;
-                    
-                    const inputElement = document.getElementById(fieldId);
-
-                    if (inputElement && !inputElement.disabled && !inputElement.checkValidity()) {
-                        firstInvalidField = inputElement;
-                        break; 
-                    }
-                }
-                if (firstInvalidField) break; 
-            }
-
-            // 2. VALIDACIÓN DE SECCIÓN CONDICIONAL
-            if (!firstInvalidField && selectedType) {
-                const prefix = selectedType.id.replace('check_', '');
-                const camposCondicionales = [
-                    document.getElementById(`${prefix}_costo_proyectado`),
-                    document.getElementById(`${prefix}_pago_por_realizado`),
-                    document.getElementById(`${prefix}_precio_unitario`),
-                    document.getElementById(`${prefix}_puntos`),
-                    document.getElementById(`${prefix}_precio_unitario1`),
-                    document.getElementById(`${prefix}_puntos1`),
-                    document.getElementById(`${prefix}_descripcion`),
-                    document.getElementById(`${prefix}_abono_mensual`)
-                ];
-
-                for (const campo of camposCondicionales) {
-                    if (campo.type === 'text' || campo.type === 'select' || campo.tagName === 'TEXTAREA' || campo.type === 'date') {
-                        if (!campo.value.trim()) {
-                            firstInvalidField = campo;
-                            break;
-                        }
-                    } 
-                    else if (campo.type === 'number') {
-                        const numericValue = parseFloat(campo.value.replace(',', '.'));
-                        if (isNaN(numericValue) || numericValue < 0) {
-                            firstInvalidField = campo;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // 3. MANEJO DEL ERROR
-            if (firstInvalidField) {
-                alert('⚠️ Atención: Debe completar los campos obligatorios faltantes marcados con (*). El sistema lo llevará al primer error.');
-                
-                firstInvalidField.reportValidity();
-                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                firstInvalidField.focus();
+            if (!form.checkValidity()) {
+                alert('⚠️ Por favor, complete todos los campos obligatorios antes de crear la orden.');
+                form.reportValidity();
                 return;
             }
 
-            const formData = new FormData(form);
+            const otNumber = otCounter;
             const orderData = {};
+            const formData = new FormData(form);
             
-            // Obtener datos fijos
-            const caracasDate = getCurrentCaracasDate(); 
-            const currentUserEmail = firebase.auth().currentUser ? firebase.auth().currentUser.email : 'ERROR'; // Obtener email
-
-            // 4. Recopilar datos estáticos y dinámicos del formulario principal - CORREGIDO
-            formStructure.forEach(section => {
-                section.fields.forEach(field => {
-                    let value;
-                    let fieldId = (section.title.includes('II. Información de la Contratista') && (field.label === 'Apellido y Nombre del Responsable' || field.label === 'Rif')) 
-                                ? field.label 
-                                : field.id;
-
-                    if (field.type === 'ot_counter') value = otCounter.toString();
-                    // TIPO DE CAMPO: user-auto-fill
-                    else if (field.type === 'user-auto-fill') value = currentUserEmail; 
-                    else if (field.type === 'date-auto') value = caracasDate;
-                    else if (field.type === 'static') value = field.value;
-                    else {
-                        const inputElement = document.getElementById(fieldId);
-                        value = inputElement ? inputElement.value : formData.get(fieldId);
-                    }
-                    
-                    // Aplicar formato de fecha DD/MM/AAAA para todos los campos de fecha guardados
-                    // CORRECCIÓN: Verificar que value no sea null/undefined/string vacío
-                    if (field.type === 'date-input' && value && value.trim() !== '') {
-                        orderData[field.label] = formatDateToDDMMYYYY(value);
-                    } else {
-                        // CORRECCIÓN: Asegurar que siempre haya un valor válido
-                        const sanitizedValue = sanitizeInput(value);
-                        orderData[field.label] = (sanitizedValue && sanitizedValue.trim() !== '') ? sanitizedValue : 'N/A';
-                    }
-                });
+            // Recoger los datos fijos del encabezado (no están en FormData)
+            formStructure[0].fields.forEach(field => {
+                let value = '';
+                if (field.type === 'static') value = field.value;
+                else if (field.type === 'ot_counter') value = otNumber;
+                else if (field.type === 'date-auto') value = getCurrentCaracasDate();
+                else if (field.type === 'user-auto-fill') value = firebase.auth().currentUser ? firebase.auth().currentUser.email : 'USUARIO NO LOGUEADO';
+                
+                if (value !== '') {
+                    orderData[field.label] = value;
+                }
             });
-            
-            // 5. Recopilar datos de la sección condicional seleccionada 
-            orderData['Tipo de Construcción Seleccionada'] = selectedType ? selectedType.textContent.trim() : 'Ninguno';
 
-            if (selectedType) {
-                const prefix = selectedType.id.replace('check_', '');
+            // Recoger los datos dinámicos (están en FormData)
+            for (let [key, value] of formData.entries()) {
+                // El name/id del campo puede no ser un label amigable, así que usamos el label si lo encontramos.
+                // Sin embargo, si es un campo de autollenado (Apellido/Rif) o total oculto, el name es el label.
                 
-                calculateNewTotal(prefix); 
-
-                orderData[`${prefix} | Costo Proyectado de la Obra`] = sanitizeInput(document.getElementById(`${prefix}_costo_proyectado`).value) || 'N/A';
-                orderData[`${prefix} | Pago realizado por`] = sanitizeInput(document.getElementById(`${prefix}_pago_por_realizado`).value) || 'N/A';
+                // Excluir los totales ocultos (se añaden después)
+                if (key.endsWith('_total_hidden') || key.endsWith('_total_hidden1')) continue;
                 
-                // Guardar ambos totales calculados
-                orderData[`${prefix} | Pago x VGT CANTV a cargo de Inter`] = formData.get(`${prefix}_total_hidden`) || '0.00';
-                orderData[`${prefix} | Pago x VGT EDC a cargo de Inter`] = formData.get(`${prefix}_total_hidden1`) || '0.00';
+                let label = key;
 
-                orderData[`${prefix} | Precio Unitario CANTV`] = parseFloat(document.getElementById(`${prefix}_precio_unitario`).value.replace(',', '.')).toFixed(2) || '0.00';
-                orderData[`${prefix} | Puntos CANTV`] = parseFloat(document.getElementById(`${prefix}_puntos`).value.replace(',', '.')).toFixed(0) || '0'; 
+                // Buscar el label amigable en la estructura (para campos dinámicos)
+                let foundField = null;
+                formStructure.some(section => 
+                    section.fields.some(field => {
+                        // Comprobar por ID (para campos dinámicos con ID único)
+                        if (field.id === key) {
+                            label = field.label;
+                            foundField = field;
+                            return true;
+                        }
+                        // Comprobar por Label (para campos autollenados con Label como ID/Name)
+                        if (field.label === key) {
+                            label = field.label;
+                            foundField = field;
+                            return true;
+                        }
+                        return false;
+                    })
+                );
                 
-                orderData[`${prefix} | Precio Unitario EDC`] = parseFloat(document.getElementById(`${prefix}_precio_unitario1`).value.replace(',', '.')).toFixed(2) || '0.00';
-                orderData[`${prefix} | Puntos EDC`] = parseFloat(document.getElementById(`${prefix}_puntos1`).value.replace(',', '.')).toFixed(0) || '0'; 
-
-                orderData[`${prefix} | Descripción`] = sanitizeInput(document.getElementById(`${prefix}_descripcion`).value) || 'N/A';
-                orderData[`${prefix} | Abono Mensual a Recibir por el cliente`] = sanitizeInput(document.getElementById(`${prefix}_abono_mensual`).value) || 'N/A';
+                // Para campos de fecha, formatear el valor
+                if (foundField && foundField.type === 'date-input') {
+                    value = formatDateToDDMMYYYY(value);
+                }
+                
+                orderData[label] = value;
             }
 
+            // Recoger datos de secciones condicionales (Totales)
+            const activePrefix = document.getElementById('conditional_node_acceso_section').style.display === 'block' ? 'node_acceso' : 
+                                 document.getElementById('conditional_isp_section').style.display === 'block' ? 'isp' : null;
 
-            // 6. **GUARDAR EN FIREBASE**
-            console.log("Datos a guardar en Firebase:", orderData); // Para debugging
+            if (activePrefix) {
+                // Recuperar los valores de los inputs *ocultos* de total
+                const totalCantv = document.getElementById(`${activePrefix}_total_hidden`).value;
+                const totalEdc = document.getElementById(`${activePrefix}_total_hidden1`).value;
+
+                orderData['Tipo de Obra'] = activePrefix === 'node_acceso' ? 'Nodo de Acceso' : 'ISP';
+                orderData['Costo Proyectado de la Obra'] = document.getElementById(`${activePrefix}_costo_proyectado`).value;
+                orderData['Pago realizado por'] = document.getElementById(`${activePrefix}_pago_por_realizado`).value;
+                
+                // Campos de CANTV
+                orderData['CANTV - Precio Unitario'] = document.getElementById(`${activePrefix}_precio_unitario`).value;
+                orderData['CANTV - Puntos'] = document.getElementById(`${activePrefix}_puntos`).value;
+                orderData['CANTV - Total'] = totalCantv; // Usar el valor del input oculto
+                
+                // Campos de EDC
+                orderData['EDC - Precio Unitario'] = document.getElementById(`${activePrefix}_precio_unitario1`).value;
+                orderData['EDC - Puntos'] = document.getElementById(`${activePrefix}_puntos1`).value;
+                orderData['EDC - Total'] = totalEdc; // Usar el valor del input oculto
+                
+                // Descripción (campo de área de texto)
+                orderData['Descripción del Trabajo'] = document.getElementById(`${activePrefix}_descripcion`).value;
+
+                // Abono Mensual (solo ISP)
+                if (activePrefix === 'isp') {
+                     orderData['Abono Mensual'] = document.getElementById(`${activePrefix}_abono_mensual`).value;
+                }
+            } else {
+                 orderData['Tipo de Obra'] = 'N/A (No seleccionado)';
+            }
             
+            // 2. Guardar en Firestore
+            let tempElement; // Declarar fuera del try/catch
             try {
-                const docRef = await ORDERS_COLLECTION.add(orderData); 
+                // Generar un ID antes de guardar
+                const newDocRef = ORDERS_COLLECTION.doc(); 
+                await newDocRef.set(orderData);
                 
-                // 7. Actualizar array local y contador
-                orderData.id = docRef.id; 
-                workOrders.push(orderData);
+                // 3. Incrementar el contador global y guardarlo
                 otCounter++;
+                await saveFormStructure(true); // Guardar nuevo contador sin alert
+
+                // 4. Actualizar estado local
+                workOrders.unshift({ id: newDocRef.id, ...orderData }); // Añadir al inicio de la lista
+                renderOrdersTable(); // Actualizar la tabla
+
+                // 5. Generar PDF (AQUÍ ESTÁ LA CORRECCIÓN CLAVE)
+                // A. Crear el contenido HTML del PDF
+                const pdfContent = generatePDFContentHTML(orderData);
+                const otFileName = `OT_Nro_${otNumber}_${orderData['Título del Formulario'] || 'Orden'}.pdf`;
+
+                // B. Elemento temporal para html2pdf
+                tempElement = document.createElement('div');
+                tempElement.innerHTML = pdfContent;
                 
-                // 8. Guardar la nueva estructura/contador
-                await saveFormStructure(true); 
+                // ** CORRECCIÓN: Agregar temporalmente el elemento al DOM para que html2canvas funcione **
+                tempElement.style.position = 'absolute';
+                tempElement.style.left = '-9999px'; // Mover fuera de la vista
+                document.body.appendChild(tempElement); 
 
-                // 9. Generar PDF - CORREGIDO
-                console.log('Generando PDF para nueva orden...');
-                await generatePDF(orderData);
-                console.log('PDF generado exitosamente');
+                // C. Configuración y ejecución de html2pdf
+                const options = {
+                    margin: 10,
+                    filename: otFileName,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, logging: true, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
 
-                // 10. Reiniciar UI
+                // La función html2pdf recibe el *elemento* DOM
+                await html2pdf().from(tempElement).set(options).save(); 
+                
+                // ** CORRECCIÓN: Eliminar el elemento del DOM una vez que la generación haya terminado **
+                document.body.removeChild(tempElement); 
+
+                alert(`🎉 Orden de Trabajo Nro. ${otNumber} creada y guardada exitosamente. Se ha descargado el PDF.`);
+                
+                // Limpiar el formulario y re-renderizar
                 form.reset();
-                renderWorkOrderForm(); 
-                renderOrdersTable(); 
+                renderWorkOrderForm();
+
+            } catch (error) {
+                console.error("Error al crear y guardar la orden o generar PDF:", error);
+                alert("🔴 Error al crear la Orden de Trabajo o generar el PDF. Detalles: " + error.message);
                 
-                alert('✅ Orden de Trabajo creada exitosamente y PDF generado.');
-                
-            } catch (e) {
-                console.error("Error al crear la orden:", e);
-                console.error("Detalles completos del error:", e.message, e.stack);
-                
-                let errorMessage = "Error al guardar la orden de trabajo en Firebase. ";
-                
-                if (e.code === 'permission-denied') {
-                    errorMessage += "Error de permisos. Verifique las reglas de seguridad de Firestore.";
-                } else if (e.code === 'unavailable') {
-                    errorMessage += "Error de conexión. Verifique su conexión a internet.";
-                } else {
-                    errorMessage += `Detalles: ${e.message}`;
+                // Asegurar que se elimine el elemento incluso si falla
+                 if (tempElement && document.body.contains(tempElement)) {
+                    document.body.removeChild(tempElement);
                 }
-                
-                alert(errorMessage);
             }
         }
 
-        // *** 6. GENERACIÓN DE PDF CORREGIDA ***
 
-        // *** FUNCIÓN: Formatear texto largo para PDF ***
-        function formatLongTextForPDF(text, maxLineLength = 80) {
-            if (!text || text === 'N/A') return 'N/A';
+        // *** 6. LÓGICA DE VISUALIZACIÓN Y PDF (ÓRDENES CREADAS) ***
+
+        /**
+         * Renderiza la tabla de órdenes de trabajo.
+         */
+        function renderOrdersTable() {
+            const tableBody = document.querySelector('#orders-table tbody');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
             
-            // Convertir saltos de línea HTML a saltos de línea reales
-            let formattedText = text.replace(/<br\s*\/?>/gi, '\n');
-            
-            // Si el texto es corto, devolverlo tal cual
-            if (formattedText.length <= maxLineLength) {
-                return formattedText;
-            }
-            
-            // Dividir el texto en líneas más cortas si es muy largo
-            const words = formattedText.split(' ');
-            let lines = [];
-            let currentLine = '';
-            
-            words.forEach(word => {
-                if ((currentLine + ' ' + word).length <= maxLineLength) {
-                    currentLine += (currentLine ? ' ' : '') + word;
+            // Determinar si el usuario tiene permiso para generar el PDF (Admin/Normal)
+            const canGeneratePdf = (currentRole === 'admin' || currentRole === 'normal');
+
+            workOrders.forEach(order => {
+                const otNumber = order['Orden de Trabajo'] || 'N/A';
+                const otTitle = order['Título del Formulario'] || 'Orden de Trabajo';
+                const otDate = order['Fecha Actual'] || 'N/A';
+                
+                let actionButton = '';
+                if (canGeneratePdf) {
+                    actionButton = `<button onclick="viewOrderDetails('${order.id}')">Descargar PDF</button>`;
                 } else {
-                    if (currentLine) lines.push(currentLine);
-                    currentLine = word;
+                    actionButton = `<span>Solo Vista</span>`;
                 }
+
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${otNumber}</td>
+                    <td>${otTitle}</td>
+                    <td>${otDate}</td>
+                    <td>${actionButton}</td>
+                `;
             });
-            
-            if (currentLine) lines.push(currentLine);
-            
-            return lines.join('\n');
+        }
+        
+        // FUNCIÓN CORREGIDA PARA DESCARGA DE PDF DE ÓRDENES EXISTENTES
+        /**
+         * Muestra los detalles de una orden específica y genera su PDF.
+         * @param {string} orderId - El ID de la orden.
+         */
+        async function viewOrderDetails(orderId) {
+            const order = workOrders.find(o => o.id === orderId);
+            if (!order) {
+                alert("Orden no encontrada.");
+                return;
+            }
+
+            // 1. Crear el contenido HTML del PDF
+            const pdfContent = generatePDFContentHTML(order);
+            const otNumber = order['Orden de Trabajo'] || 'N-A';
+            const otFileName = `OT_Nro_${otNumber}_${order['Título del Formulario'] || 'Orden'}.pdf`;
+
+            // 2. Elemento temporal para html2pdf
+            const tempElement = document.createElement('div');
+            tempElement.innerHTML = pdfContent;
+
+            // 3. Configuración y ejecución de html2pdf
+            const options = {
+                margin: 10,
+                filename: otFileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, logging: true, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                // ** CORRECCIÓN: Agregar temporalmente el elemento al DOM para que html2canvas funcione **
+                tempElement.style.position = 'absolute';
+                tempElement.style.left = '-9999px'; 
+                document.body.appendChild(tempElement);
+                
+                await html2pdf().from(tempElement).set(options).save();
+                
+                // ** CORRECCIÓN: Eliminar el elemento del DOM una vez que la generación haya terminado **
+                document.body.removeChild(tempElement); 
+                
+                alert(`✅ PDF de la Orden Nro. ${otNumber} generado y descargado.`);
+
+            } catch (error) {
+                console.error("Error al generar PDF:", error);
+                alert("🔴 Error al generar el PDF. Detalles: " + error.message);
+                // Asegurar que se elimine el elemento incluso si falla
+                 if (document.body.contains(tempElement)) {
+                    document.body.removeChild(tempElement);
+                }
+            }
         }
 
-        function generatePDF(data) {
-            return new Promise((resolve, reject) => {
-                try {
-                    const otNumber = data['Orden de Trabajo'];
-                    const creationDate = data['Fecha Actual'] || 'N/A';
-                    const fileName = `Orden_Trabajo_${otNumber}_${creationDate.replace(/\//g, '-')}.pdf`;
+        /**
+         * Genera el contenido HTML para el PDF.
+         * @param {Object} data - Objeto con los datos de la orden.
+         * @returns {string} - Cadena HTML.
+         */
+        function generatePDFContentHTML(data) {
+            // Función auxiliar para formatear la fecha a DD/MM/AAAA para el PDF
+            function formatPdfDate(dateString) {
+                if (!dateString) return '';
+                // Asume que la fecha guardada en Firestore ya está en formato DD/MM/AAAA
+                return dateString;
+            }
+            
+            // Función auxiliar para generar las filas de la tabla de detalles
+            function generateDetailRows() {
+                let html = '';
+                let sectionTitle = '';
+                
+                // Orden de presentación de campos fijos
+                const fieldOrder = [
+                    'Título del Formulario', 
+                    'Orden de Trabajo', 
+                    'Usuario que Crea la Orden', 
+                    'Fecha Actual'
+                ];
+                
+                // Obtener todas las claves (labels) de los datos, excluyendo el ID
+                const allKeys = Object.keys(data).filter(key => key !== 'id').sort();
+
+                // Unir campos fijos, dinámicos y totales para la presentación en el PDF
+                const keysToDisplay = [
+                    ...fieldOrder.filter(key => allKeys.includes(key)), // Fijos primero
+                    ...allKeys.filter(key => !fieldOrder.includes(key)) // El resto
+                ];
+                
+                // Agrupación manual de secciones (basada en la estructura esperada del formulario)
+                const sectionsMap = {
+                    "I. Información General": fieldOrder,
+                    "II. Información de la Contratista": ["Nombre de la Empresa", "Razón Social", "Rif", "Apellido y Nombre del Responsable", "Teléfono de Contacto"],
+                    "III. Información del Trabajo/Obra (Básico)": ["Sector/Urbanización", "Domicilio", "Punto de Referencia"],
+                    "IV. Tipo y Costos de la Obra": ["Tipo de Obra", "Costo Proyectado de la Obra", "Pago realizado por", "Abono Mensual"],
+                    "V. Detalles de VGT (CANTV/EDC)": ["CANTV - Precio Unitario", "CANTV - Puntos", "CANTV - Total", "EDC - Precio Unitario", "EDC - Puntos", "EDC - Total"],
+                    "VI. Descripción del Trabajo": ["Descripción del Trabajo"]
+                };
+                
+                let currentSection = '';
+                
+                keysToDisplay.forEach(key => {
+                    const value = data[key];
+                    if (value === undefined) return; 
+
+                    // Determinar a qué sección pertenece la clave actual
+                    let foundSection = '';
+                    for (const [title, keys] of Object.entries(sectionsMap)) {
+                        if (keys.includes(key)) {
+                            foundSection = title;
+                            break;
+                        }
+                    }
+
+                    // Si la sección cambia, agregar el título de la nueva sección
+                    if (foundSection && foundSection !== currentSection) {
+                        html += `<tr><td colspan="2" style="background-color: #ADD8E6; font-weight: bold; padding: 8px; border-top: 2px solid #36454F;">${foundSection}</td></tr>`;
+                        currentSection = foundSection;
+                    }
+
+
+                    // Formateo de valores numéricos/monetarios
+                    let displayValue = value;
+                    if (key.includes('Precio Unitario') || key.includes('Total') || key.includes('Costo Proyectado') || key.includes('Abono Mensual')) {
+                         // Asume que son números y los formatea como moneda
+                         const numValue = parseFloat(value);
+                         if (!isNaN(numValue)) {
+                             // Intenta usar el formato monetario venezolano, si no, usa el formato general.
+                             try {
+                                displayValue = numValue.toLocaleString('es-VE', { style: 'currency', currency: 'VES' });
+                             } catch (e) {
+                                displayValue = numValue.toFixed(2) + ' VES';
+                             }
+                         }
+                    } else if (key === 'Fecha Actual') {
+                        displayValue = formatPdfDate(value);
+                    } else if (key === 'Descripción del Trabajo' || key === 'Domicilio' || key === 'Punto de Referencia') {
+                         // Para áreas de texto o campos largos, se usan filas completas
+                         html += `<tr><td style="font-weight: bold; width: 30%; border-right: none;">${key}:</td><td style="border-left: none;"></td></tr>`;
+                         html += `<tr><td colspan="2" style="white-space: pre-wrap; padding: 10px; border-top: none; background-color: #f7fbff;">${displayValue}</td></tr>`;
+                         return; // Saltar el formato de fila normal
+                    }
                     
-                    console.log('Iniciando generación de PDF para orden:', otNumber);
-
-                    // Crear un contenedor visible temporalmente
-                    const printContainer = document.createElement('div');
-                    printContainer.id = 'pdf-print-container';
-                    printContainer.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 210mm;
-                        min-height: 297mm;
-                        background: white;
-                        padding: 20px;
-                        z-index: 10000;
-                        font-family: Arial, sans-serif;
-                        box-sizing: border-box;
-                        border: 1px solid #ccc;
-                        overflow: hidden;
-                    `;
-
-                    // Construir el contenido HTML completo
-                    let formContentHTML = `
-                        <div style="font-family: 'Arial', sans-serif; padding: 20px; color: #36454F; line-height: 1.4; width: 100%;">
-                            <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px;">${data['Título del Formulario']} Nro. ${otNumber}</h1>
-                            
-                            <div style="text-align: right; margin-bottom: 25px; font-weight: bold; color: #555;">
-                                Fecha de Emisión: ${data['Fecha Actual']}
-                            </div>
-                    `;
-
-                    // Contenido del Formulario por Secciones (Dinámicas)
-                    formStructure.forEach((section, secIndex) => {
-                        
-                        formContentHTML += `<div style="page-break-inside: avoid; margin-bottom: 25px; width: 100%;">`;
-                        formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${section.title}</h3>`;
-                        formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
-                        
-                        section.fields.forEach(field => {
-                            const label = field.label;
-                            let value = data[label] || 'N/A';
-                            
-                            // OMITIR CAMPOS DEL ENCABEZADO
-                            if (label === 'Título del Formulario' || label === 'Orden de Trabajo' || label === 'Fecha Actual') return;
-                            
-                            // APLICAR FORMATO DE FECHA
-                            const fieldDefinition = section.fields.find(f => f.label === label);
-                            if (fieldDefinition && fieldDefinition.type === 'date-input' && value !== 'N/A') {
-                                value = formatDateToDDMMYYYY(value);
-                            }
-                            
-                            // DETECTAR CAMPOS DE TEXTO LARGO
-                            const isLongText = field.type === 'textarea' || 
-                                              /descripción|descripcion|detallada|detallado|observación|observacion|comentario|notas|detalle/i.test(label);
-                            
-                            let valueCellStyle = "padding: 10px 8px; vertical-align: top; border: 1px solid #B0C4DE;";
-                            let labelCellStyle = "padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%; border: 1px solid #B0C4DE;";
-                            
-                            if (isLongText) {
-                                valueCellStyle += " word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 50px;";
-                                value = formatLongTextForPDF(value);
-                            }
-
-                            formContentHTML += `
-                                <tr>
-                                    <td style="${labelCellStyle}">${label}:</td>
-                                    <td style="${valueCellStyle} width: 65%;">${value}</td>
-                                </tr>
-                            `;
-                        });
-                        
-                        formContentHTML += '</table></div>';
-                    });
-                    
-                    // Contenido de las Secciones Condicionales (Fijas)
-                    const type = data['Tipo de Construcción Seleccionada'];
-                    if (type && type !== 'Ninguno') {
-                        const prefix = type.includes('Nodo') ? 'node_acceso' : 'isp';
-                        
-                        const pagoVgtCANTV = data[`${prefix} | Pago x VGT CANTV a cargo de Inter`] || '0.00';
-                        const pagoVgtEDC = data[`${prefix} | Pago x VGT EDC a cargo de Inter`] || '0.00'; 
-                        
-                        const descripcionFormateada = formatLongTextForPDF(data[`${prefix} | Descripción`]);
-
-                        formContentHTML += `<div style="page-break-inside: avoid; margin-bottom: 25px; width: 100%;">`;
-                        formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${type}</h3>`;
-                        formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
-
-                        formContentHTML += `
+                    // Fila normal para el resto de los campos
+                    if (key !== 'Descripción del Trabajo') {
+                        html += `
                             <tr>
-                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%; border: 1px solid #B0C4DE;">Costo Proyectado de la Obra:</td>
-                                <td style="padding: 10px 8px; width: 65%; border: 1px solid #B0C4DE;">${data[`${prefix} | Costo Proyectado de la Obra`]}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Pago realizado por:</td>
-                                <td style="padding: 10px 8px; border: 1px solid #B0C4DE;">${data[`${prefix} | Pago realizado por`]}</td>
-                            </tr>
-                            
-                            <tr style="background-color: #e0f7fa;">
-                                <td style="padding: 12px 8px; font-weight: bold; border: 1px solid #B0C4DE;">Pago x VGT CANTV a cargo de Inter:</td>
-                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6; border: 1px solid #B0C4DE;">${pagoVgtCANTV}</td>
-                            </tr>
-                            
-                            <tr style="background-color: #e0f7fa;">
-                                <td style="padding: 12px 8px; font-weight: bold; border: 1px solid #B0C4DE;">Pago x VGT EDC a cargo de Inter:</td>
-                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6; border: 1px solid #B0C4DE;">${pagoVgtEDC}</td>
-                            </tr>
-                            
-                            <tr>
-                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Descripción:</td>
-                                <td style="padding: 10px 8px; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 80px; border: 1px solid #B0C4DE;">${descripcionFormateada}</td>
-                            </tr>
-                            
-                            <tr>
-                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Abono Mensual a Recibir por el cliente:</td>
-                                <td style="padding: 10px 8px; border: 1px solid #B0C4DE;">${data[`${prefix} | Abono Mensual a Recibir por el cliente`]}</td>
+                                <td style="font-weight: bold; width: 30%;">${key}:</td>
+                                <td>${displayValue}</td>
                             </tr>
                         `;
-
-                        formContentHTML += '</table></div>';
                     }
+                });
 
-                    // SECCIÓN DE FIRMAS
-                    formContentHTML += `
-                        <div style="page-break-inside: avoid; margin-top: 60px; padding-top: 30px; border-top: 2px dashed #B0C4DE; width: 100%;">
-                            <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold; width: 100%;">
-                                <div style="width: 45%;">
-                                    Firma Contratista:
-                                    <div style="border-top: 1px solid #36454F; margin-top: 5px; padding-top: 30px;"></div>
-                                </div>
-                                <div style="width: 45%;">
-                                    Firma Responsable:
-                                    <div style="border-top: 1px solid #36454F; margin-top: 5px; padding-top: 30px;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                return html;
+            }
 
-                    formContentHTML += '</div>';
 
-                    // Asignar el contenido al contenedor
-                    printContainer.innerHTML = formContentHTML;
-                    
-                    // Agregar al DOM para que se renderice
-                    document.body.appendChild(printContainer);
+            // Estructura del PDF. Se utilizan estilos en línea para asegurar la consistencia.
+            return `
+                <div style="padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #36454F; font-size: 10pt;">
+                    <div style="text-align: center; border-bottom: 2px solid #ADD8E6; padding-bottom: 10px; margin-bottom: 20px;">
+                        <h1 style="margin: 0; color: #36454F;">INTERCABLE | ORDEN DE TRABAJO NRO. ${data['Orden de Trabajo'] || 'N/A'}</h1>
+                        <p style="margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold;">${data['Título del Formulario'] || 'Detalle'}</p>
+                    </div>
 
-                    console.log('Contenedor PDF creado y agregado al DOM');
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background-color: #ADD8E6;">
+                                <th colspan="2" style="padding: 10px; text-align: left; font-size: 1.2em; border: 1px solid #B0C4DE;">Detalles de la Orden</th>
+                            </tr>
+                        </thead>
+                        <tbody style="border: 1px solid #B0C4DE;">
+                            ${generateDetailRows()}
+                        </tbody>
+                    </table>
 
-                    const opt = {
-                        margin:       10,
-                        filename:     fileName,
-                        image:        { 
-                            type: 'jpeg', 
-                            quality: 0.98 
-                        },
-                        html2canvas:  { 
-                            scale: 2,
-                            useCORS: true,
-                            logging: true,
-                            scrollX: 0,
-                            scrollY: 0,
-                            windowWidth: printContainer.scrollWidth,
-                            windowHeight: printContainer.scrollHeight
-                        },
-                        jsPDF:        { 
-                            unit: 'mm', 
-                            format: 'a4', 
-                            orientation: 'portrait',
-                            compress: true
-                        }
-                    };
+                    <div class="pdf-signatures">
+                        <span>
+                            <hr style="width: 80%; margin: 10px auto 0 auto;">
+                            Firma del Contratista
+                        </span>
+                        <span>
+                            <hr style="width: 80%; margin: 10px auto 0 auto;">
+                            Firma del Supervisor Intercable
+                        </span>
+                    </div>
 
-                    // Esperar un momento para que el DOM se actualice completamente
-                    setTimeout(() => {
-                        console.log('Generando PDF desde elemento visible...');
-                        
-                        html2pdf()
-                            .set(opt)
-                            .from(printContainer)
-                            .save()
-                            .then(() => {
-                                console.log('PDF generado y descargado exitosamente:', fileName);
-                                // Limpiar el contenedor temporal
-                                if (document.body.contains(printContainer)) {
-                                    document.body.removeChild(printContainer);
-                                }
-                                resolve();
-                            })
-                            .catch(error => {
-                                console.error('Error al generar PDF:', error);
-                                // Limpiar el contenedor temporal incluso en error
-                                if (document.body.contains(printContainer)) {
-                                    document.body.removeChild(printContainer);
-                                }
-                                reject(error);
-                            });
-                    }, 1000); // Dar más tiempo para el renderizado
+                    <p style="text-align: center; margin-top: 50px; font-size: 0.8em; color: #555;">
+                        Documento generado el ${formatPdfDate(data['Fecha Actual'])} por ${data['Usuario que Crea la Orden'] || 'Sistema'}
+                    </p>
+                </div>
+            `;
+        }
 
-                } catch (error) {
-                    console.error('Error en generatePDF:', error);
-                    // Limpiar el contenedor temporal en caso de error
-                    const printContainer = document.getElementById('pdf-print-container');
-                    if (printContainer && document.body.contains(printContainer)) {
-                        document.body.removeChild(printContainer);
-                    }
-                    reject(error);
+
+        /**
+         * Asegura que el contador de OT sea siempre mayor que el mayor número de OT existente.
+         */
+        function recalculateOtCounter() {
+            let maxOt = 0;
+            workOrders.forEach(order => {
+                const ot = parseInt(order['Orden de Trabajo']);
+                if (!isNaN(ot) && ot > maxOt) {
+                    maxOt = ot;
                 }
             });
-        }
-        
-        // *** FUNCIÓN downloadOrder CORREGIDA ***
-        function downloadOrder(orderId) {
-            console.log('Intentando descargar orden ID:', orderId);
-            
-            const order = workOrders.find(o => o.id === orderId);
-            if (order) {
-                console.log('Orden encontrada, generando PDF...');
-                generatePDF(order).then(() => {
-                    console.log('PDF descargado exitosamente');
-                }).catch(error => {
-                    console.error('Error al generar PDF:', error);
-                    alert('Error al generar el PDF. Por favor, intente nuevamente.');
-                });
-            } else {
-                console.error('Orden no encontrada con ID:', orderId);
-                alert('No se encontró la Orden de Trabajo para descargar.');
-            }
-        }
-        
-        // *** 7. LÓGICA DE ELIMINACIÓN Y CONTADOR ***
-
-        function recalculateOtCounter() {
-            if (workOrders.length === 0) {
-                otCounter = 1;
-                return;
-            }
-
-            // Extraer todos los números de orden y convertirlos a números
-            const allOtNumbers = workOrders.map(order => {
-                const otNumber = order['Orden de Trabajo'];
-                return typeof otNumber === 'string' ? parseInt(otNumber, 10) : otNumber;
-            }).filter(ot => !isNaN(ot)); // Filtrar valores no numéricos
-
-            if (allOtNumbers.length === 0) {
-                otCounter = 1;
-                return;
-            }
-
-            // Encontrar el máximo número de orden
-            const maxOt = Math.max(...allOtNumbers);
-            
-            // Verificar si hay duplicados
-            const uniqueOtNumbers = [...new Set(allOtNumbers)];
-            if (uniqueOtNumbers.length !== allOtNumbers.length) {
-                console.warn('⚠️ Se detectaron números de orden duplicados en la base de datos');
-                
-                // Encontrar el siguiente número disponible (sin duplicados)
-                let nextAvailable = maxOt + 1;
-                while (allOtNumbers.includes(nextAvailable)) {
-                    nextAvailable++;
-                }
-                otCounter = nextAvailable;
-            } else {
+            // El contador debe ser al menos 1 más que el número máximo encontrado
+            if (maxOt >= otCounter) {
                 otCounter = maxOt + 1;
             }
-            
-            console.log(`Contador recalculado: ${otCounter} (Máximo encontrado: ${maxOt})`);
         }
-
-        async function deleteWorkOrder(orderId, otNumber) {
-            // Solo Administrador puede eliminar
-            if (currentRole !== 'admin') {
-                alert('🚫 Permiso denegado. Solo un administrador puede eliminar órdenes. Refuerce las reglas de seguridad de Firestore.');
-                return;
-            }
-
-            if (!confirm(`¿Está seguro de que desea eliminar la Orden de Trabajo Nro. ${otNumber}? Esta acción es irreversible y ajustará el contador.`)) {
-                return;
-            }
-            
-            try {
-                await ORDERS_COLLECTION.doc(orderId).delete();
-                workOrders = workOrders.filter(order => order.id !== orderId);
-                recalculateOtCounter();
-                await saveFormStructure(true); // Se usa true porque no debe mostrar mensaje de éxito al guardar el contador
-                renderOrdersTable();
-                renderWorkOrderForm(); 
-
-                alert(`✅ Orden de Trabajo Nro. ${otNumber} eliminada y contador actualizado a ${otCounter}.`);
-
-            } catch (e) {
-                console.error("Error al eliminar la orden:", e);
-                alert("Error al eliminar la Orden de Trabajo de Firebase. Detalles: " + e.message);
-            }
-        }
-
-        function renderOrdersTable() {
-            const tbody = document.getElementById('orders-table').querySelector('tbody');
-            tbody.innerHTML = '';
-
-            // Ordenar las órdenes por número de OT de forma descendente
-            const sortedOrders = [...workOrders].sort((a, b) => {
-                const otA = parseInt(a['Orden de Trabajo'], 10) || 0;
-                const otB = parseInt(b['Orden de Trabajo'], 10) || 0;
-                return otB - otA; // Orden descendente (más recientes primero)
-            });
-
-            sortedOrders.forEach(order => {
-                const row = tbody.insertRow();
-                row.insertCell().textContent = order['Orden de Trabajo'];
-                row.insertCell().textContent = order['Título del Formulario'];
-                const creationDate = order['Fecha Actual'] || 'N/A';
-                row.insertCell().textContent = creationDate;
-                
-                const actionCell = row.insertCell();
-                
-                // Botón de Descarga PDF
-                const downloadBtn = document.createElement('button');
-                downloadBtn.textContent = '⬇️ PDF';
-                downloadBtn.style.backgroundColor = '#77DD77'; 
-                downloadBtn.style.color = 'white';
-                downloadBtn.onclick = () => {
-                    console.log('Botón PDF clickeado para orden:', order.id);
-                    downloadOrder(order.id);
-                };
-                actionCell.appendChild(downloadBtn);
-                
-                // Botón de Eliminar (Solo para Admin)
-                if (currentRole === 'admin') {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.textContent = '🗑️ Eliminar';
-                    deleteBtn.style.backgroundColor = 'var(--color-error)';
-                    deleteBtn.style.color = 'white';
-                    deleteBtn.style.marginLeft = '5px';
-                    deleteBtn.onclick = () => deleteWorkOrder(order.id, order['Orden de Trabajo']);
-                    actionCell.appendChild(deleteBtn);
-                }
-            });
-        }
-
-        // *** 8. FUNCIÓN PARA LIMPIAR DUPLICADOS ***
+        
+        /**
+         * Función administrativa para limpiar órdenes duplicadas (solo visible para admin).
+         */
         async function cleanDuplicateOrders() {
             if (currentRole !== 'admin') {
-                alert('Solo administradores pueden ejecutar esta función');
+                alert("🚫 Permiso denegado.");
                 return;
             }
-            
-            if (!confirm('¿Está seguro de que desea limpiar órdenes duplicadas? Esta acción eliminará todas las órdenes con números duplicados, manteniendo solo la más reciente de cada número.')) {
+
+            if (!confirm("⚠️ ¿Estás seguro de que deseas ejecutar la limpieza de órdenes duplicadas? Esto eliminará las copias antiguas, manteniendo solo la más reciente por número de OT.")) {
                 return;
             }
-            
+
             try {
+                // 1. Obtener todas las órdenes
                 const ordersSnapshot = await ORDERS_COLLECTION.get();
                 const allOrders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                // Encontrar duplicados por número de OT
-                const otCounts = {};
-                allOrders.forEach(order => {
+
+                // 2. Agrupar por número de OT
+                const ordersByOt = allOrders.reduce((acc, order) => {
                     const otNumber = order['Orden de Trabajo'];
-                    if (!otCounts[otNumber]) {
-                        otCounts[otNumber] = [];
+                    if (otNumber) {
+                        if (!acc[otNumber]) {
+                            acc[otNumber] = [];
+                        }
+                        acc[otNumber].push(order);
                     }
-                    otCounts[otNumber].push(order);
-                });
+                    return acc;
+                }, {});
+
+                // 3. Identificar duplicados (más de un documento por número de OT)
+                const duplicates = new Map(Object.entries(ordersByOt).filter(([ot, orders]) => orders.length > 1));
                 
-                const duplicates = Object.entries(otCounts).filter(([ot, orders]) => orders.length > 1);
-                
-                if (duplicates.length === 0) {
-                    alert('No se encontraron órdenes duplicadas');
-                    return;
+                if (duplicates.size === 0) {
+                     alert("✅ No se encontraron órdenes duplicadas por número de OT.");
+                     return;
                 }
-                
-                console.log('Duplicados encontrados:', duplicates);
-                
-                // Eliminar duplicados (mantener el más reciente por fecha de creación)
+
+                // 4. Eliminar duplicados (mantener el más reciente por fecha de creación)
                 let deletedCount = 0;
                 for (const [otNumber, orders] of duplicates) {
                     // Ordenar por fecha (mantener el más reciente)
                     const sorted = orders.sort((a, b) => {
-                        const dateA = new Date(a['Fecha Actual'] || 0);
-                        const dateB = new Date(b['Fecha Actual'] || 0);
-                        return dateB - dateA;
+                        // Intentar parsear la fecha de DD/MM/AAAA. Si falla, usar 0 o Date.now()
+                        const parseDate = (dateStr) => {
+                             if (!dateStr || typeof dateStr !== 'string') return 0;
+                             const parts = dateStr.split('/');
+                             if (parts.length === 3) {
+                                // M-D-Y format for new Date()
+                                 return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`); 
+                             }
+                             return 0;
+                        };
+                        
+                        const dateA = parseDate(a['Fecha Actual']);
+                        const dateB = parseDate(b['Fecha Actual']);
+                        
+                        // Si las fechas son válidas, ordenar por fecha descendente
+                        if (dateA && dateB) return dateB - dateA;
+                        // Si no tienen fecha válida, ordenar por ID (que contiene el timestamp de creación)
+                        return b.id.localeCompare(a.id);
                     });
                     
                     // Eliminar todos excepto el primero (más reciente)
