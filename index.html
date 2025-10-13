@@ -213,99 +213,39 @@
             z-index: 1000;
         }
 
-        /* Estilos para la sección de respaldo */
+        /* Estilos para las funciones de exportación/importación */
         .backup-section {
             border: 2px solid var(--color-warning);
             border-radius: 8px;
             padding: 20px;
-            margin-bottom: 25px;
+            margin: 20px 0;
             background-color: #fffaf0;
         }
-
-        .backup-warning {
-            background-color: var(--color-warning);
-            color: var(--color-white);
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-weight: bold;
+        
+        .backup-section h4 {
+            color: var(--color-warning);
+            border-bottom: 1px solid var(--color-warning);
         }
-
-        .backup-success {
-            background-color: var(--color-success);
-            color: var(--color-white);
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-
-        .backup-error {
-            background-color: var(--color-error);
-            color: var(--color-white);
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-
-        .file-input-container {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .file-input-container input[type="file"] {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .file-input-label {
-            display: block;
-            padding: 12px;
-            background-color: var(--color-primary);
-            color: var(--color-text);
-            text-align: center;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 2px dashed var(--color-secondary);
-        }
-
-        .file-input-label:hover {
-            background-color: var(--color-accent);
-        }
-
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        
+        .backup-buttons {
+            display: flex;
             gap: 15px;
-            margin: 20px 0;
+            flex-wrap: wrap;
+            margin-top: 15px;
         }
-
-        .stat-card {
-            background-color: var(--color-bg);
-            border: 1px solid var(--color-secondary);
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--color-accent);
-        }
-
-        .stat-label {
-            font-size: 0.9em;
+        
+        .backup-button {
+            background-color: var(--color-warning);
             color: var(--color-text);
-            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        .backup-button:hover {
+            background-color: #ffa726;
+        }
+        
+        #import-file {
+            margin: 10px 0;
         }
 
     </style>
@@ -328,7 +268,6 @@
             <button class="tablinks" id="new-order-tab-button" onclick="openTab(event, 'new-order')">📋 Nueva Orden de Trabajo</button>
             <button class="tablinks" onclick="openTab(event, 'view-orders')">📂 Órdenes Creadas</button>
             <button class="tablinks" id="edit-tab-button" onclick="openTab(event, 'edit-form')" style="display: none;">⚙️ Edición de Formulario</button>
-            <button class="tablinks" id="backup-tab-button" onclick="openTab(event, 'backup-restore')" style="display: none;">💾 Respaldo/Restauración</button>
             <button onclick="logout()" style="float: right;">🚪 Cerrar Sesión</button>
         </div>
 
@@ -358,76 +297,22 @@
             <div id="form-editor"></div>
             <button onclick="saveFormStructure(false)">💾 Guardar Estructura del Formulario</button>
             <button onclick="cleanDuplicateOrders()" style="background-color: var(--color-error); color: white; margin-left: 10px;">🧹 Limpiar Duplicados</button>
-        </div>
-
-        <!-- NUEVA PESTAÑA: Respaldo y Restauración -->
-        <div id="backup-restore" class="tabcontent">
-            <h3>🔧 Sistema de Respaldo y Restauración</h3>
             
+            <!-- NUEVA SECCIÓN: Exportación e Importación de Base de Datos -->
             <div class="backup-section">
-                <h4>📊 Estadísticas Actuales</h4>
-                <div class="stats-container" id="backup-stats">
-                    <!-- Las estadísticas se cargarán dinámicamente -->
-                </div>
-            </div>
-
-            <div class="backup-section">
-                <h4>📥 Exportar Base de Datos</h4>
-                <p>Exporte toda la información del sistema (órdenes de trabajo, configuración y estructura del formulario) a un archivo JSON.</p>
+                <h4>🔄 Respaldo y Restauración de Base de Datos</h4>
+                <p>Estas funciones permiten exportar e importar toda la información del sistema para realizar respaldos o migraciones.</p>
                 
-                <div class="backup-warning">
-                    ⚠️ ADVERTENCIA: Este archivo contiene información sensible. Guárdelo en un lugar seguro.
+                <div class="backup-buttons">
+                    <button class="backup-button" onclick="exportDatabase()">📤 Exportar Base de Datos</button>
+                    <button class="backup-button" onclick="document.getElementById('import-file').click()">📥 Importar Base de Datos</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importDatabase(this.files[0])">
                 </div>
                 
-                <button onclick="exportDatabase()" style="background-color: var(--color-success);">
-                    💾 Exportar Base de Datos Completa
-                </button>
-                
-                <button onclick="exportOrdersOnly()" style="background-color: var(--color-accent); margin-left: 10px;">
-                    📋 Exportar Solo Órdenes de Trabajo
-                </button>
-            </div>
-
-            <div class="backup-section">
-                <h4>📤 Importar Base de Datos</h4>
-                <p>Importe datos desde un archivo JSON de respaldo. Esto reemplazará toda la información actual.</p>
-                
-                <div class="backup-warning">
-                    ⚠️ ADVERTENCIA CRÍTICA: Esta acción SOBREESCRIBIRÁ todos los datos actuales. Realice un respaldo antes de proceder.
-                </div>
-                
-                <div class="file-input-container">
-                    <input type="file" id="backup-file" accept=".json" onchange="handleFileSelect(this.files)">
-                    <label for="backup-file" class="file-input-label">
-                        📁 Seleccionar Archivo de Respaldo (.json)
-                    </label>
-                </div>
-                
-                <div id="file-info" style="margin-top: 10px; padding: 10px; background-color: var(--color-bg); border-radius: 6px; display: none;">
-                    <!-- Información del archivo seleccionado -->
-                </div>
-                
-                <button onclick="importDatabase()" id="import-button" style="background-color: var(--color-warning); margin-top: 15px; display: none;">
-                    🔄 Restaurar desde Archivo
-                </button>
-            </div>
-
-            <div class="backup-section">
-                <h4>🔄 Sincronización con Firebase</h4>
-                <p>Opciones para sincronizar datos entre el respaldo local y Firebase.</p>
-                
-                <button onclick="syncToFirebase()" style="background-color: var(--color-primary);">
-                    ☁️ Subir Respaldo a Firebase
-                </button>
-                
-                <button onclick="loadFromFirebase()" style="background-color: var(--color-secondary); margin-left: 10px;">
-                    📥 Descargar desde Firebase
-                </button>
-            </div>
-
-            <!-- Área para mostrar mensajes -->
-            <div id="backup-messages" style="margin-top: 20px;">
-                <!-- Los mensajes se mostrarán aquí -->
+                <p style="font-size: 0.9em; margin-top: 15px; color: var(--color-warning);">
+                    <strong>Nota:</strong> La importación reemplazará todos los datos actuales en la base de datos. 
+                    Asegúrese de tener un respaldo reciente antes de realizar esta operación.
+                </p>
             </div>
         </div>
     </div>
@@ -456,8 +341,7 @@
         let formStructure = null; 
         let workOrders = []; 
         let otCounter = 1; 
-        let currentRole = null;
-        let selectedBackupFile = null;
+        let currentRole = null; 
 
         // ----------------------------------------------------------------------------------
         // *** CONFIGURACIÓN DE ROLES CON MÚLTIPLES CORREOS (LISTAS/ARRAYS) ***
@@ -628,311 +512,132 @@
             { title: "II. Información de la Contratista", fields: []},
             { title: "III. Información del Trabajo/Obra", fields: []}
         ];
+        
+        // *** 2. LÓGICA DE FIREBASE: CARGA Y GUARDADO ***
 
-        // *** 2. SISTEMA DE EXPORTACIÓN E IMPORTACIÓN ***
-
-        /**
-         * Exporta toda la base de datos a un archivo JSON
-         */
-        async function exportDatabase() {
+        async function loadInitialData() {
             try {
-                showMessage('⏳ Preparando exportación de datos...', 'info');
+                // Cargar Estructura del Formulario y Contador
+                const configDoc = await CONFIG_COLLECTION.doc("systemConfig").get();
+                if (configDoc.exists) {
+                    const data = configDoc.data();
+                    formStructure = data.formStructure || DEFAULT_FORM_STRUCTURE;
+                    
+                    // Lógica de Migración: si faltan campos fijos (como el nuevo de usuario), los agregamos.
+                    const infoGeneralFields = formStructure[0].fields;
+                    const hasUserField = infoGeneralFields.some(f => f.id === 'user_auto_fill');
+                    if (!hasUserField) {
+                         // Insertar el campo de usuario en la posición correcta (antes de la fecha)
+                         const dateIndex = infoGeneralFields.findIndex(f => f.id === 'current_date');
+                         if (dateIndex !== -1) {
+                             infoGeneralFields.splice(dateIndex, 0, DEFAULT_FORM_STRUCTURE[0].fields[2]);
+                         } else {
+                             // Si no encuentra la fecha, lo pone al final de la sección I
+                             infoGeneralFields.push(DEFAULT_FORM_STRUCTURE[0].fields[2]);
+                         }
+                    }
+
+                    // Lógica de Migración de títulos (siempre los mantenemos con el romano)
+                    if (formStructure.length >= 3) {
+                         if (formStructure[0].title === "Información General" || formStructure[0].title === "I. Información General") formStructure[0].title = "I. Información General";
+                         if (formStructure[1].title === "Información de la Contratista" || formStructure[1].title === "II. Información de la Contratista") formStructure[1].title = "II. Información de la Contratista";
+                         if (formStructure[2].title === "Información del Trabajo/Obra" || formStructure[2].title === "III. Información del Trabajo/Obra") formStructure[2].title = "III. Información del Trabajo/Obra";
+                    }
+
+                    otCounter = data.otCounter || 1;
+                } else {
+                    // Primera vez: usa el valor por defecto y guárdalo
+                    formStructure = DEFAULT_FORM_STRUCTURE;
+                    await saveFormStructure(true); 
+                }
                 
-                // Recopilar todos los datos
-                const exportData = {
-                    metadata: {
-                        exportDate: new Date().toISOString(),
-                        version: '1.0',
-                        system: 'Sistema de Órdenes de Trabajo',
-                        totalOrders: workOrders.length,
-                        otCounter: otCounter
-                    },
+                // Cargar Órdenes de Trabajo CON ORDENAMIENTO
+                const ordersSnapshot = await ORDERS_COLLECTION.orderBy('Fecha Actual', 'desc').get();
+                workOrders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Asegurar que el contador esté correcto al inicio
+                recalculateOtCounter();
+
+            } catch (e) {
+                console.error("Error cargando datos iniciales: ", e);
+                alert("Error al conectar con la base de datos. Verifique su conexión y las reglas de seguridad de Firestore. Detalles: " + e.message);
+            }
+        }
+        
+        async function saveFormStructure(initial = false) {
+            try {
+                await CONFIG_COLLECTION.doc("systemConfig").set({
                     formStructure: formStructure,
-                    workOrders: workOrders,
-                    config: {
-                        otCounter: otCounter,
-                        formStructure: formStructure
-                    }
-                };
+                    otCounter: otCounter
+                }, { merge: true });
 
-                // Crear y descargar el archivo
-                const dataStr = JSON.stringify(exportData, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                
-                const link = document.createElement('a');
-                const timestamp = new Date().toISOString().split('T')[0];
-                link.download = `respaldo_ordenes_trabajo_${timestamp}.json`;
-                link.href = url;
-                link.click();
-                
-                URL.revokeObjectURL(url);
-                showMessage('✅ Base de datos exportada exitosamente', 'success');
-                
-            } catch (error) {
-                console.error('Error al exportar la base de datos:', error);
-                showMessage('❌ Error al exportar la base de datos: ' + error.message, 'error');
-            }
-        }
-
-        /**
-         * Exporta solo las órdenes de trabajo
-         */
-        async function exportOrdersOnly() {
-            try {
-                showMessage('⏳ Preparando exportación de órdenes...', 'info');
-                
-                const exportData = {
-                    metadata: {
-                        exportDate: new Date().toISOString(),
-                        version: '1.0',
-                        type: 'orders_only',
-                        totalOrders: workOrders.length
-                    },
-                    workOrders: workOrders
-                };
-
-                const dataStr = JSON.stringify(exportData, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                
-                const link = document.createElement('a');
-                const timestamp = new Date().toISOString().split('T')[0];
-                link.download = `ordenes_trabajo_${timestamp}.json`;
-                link.href = url;
-                link.click();
-                
-                URL.revokeObjectURL(url);
-                showMessage('✅ Órdenes de trabajo exportadas exitosamente', 'success');
-                
-            } catch (error) {
-                console.error('Error al exportar las órdenes:', error);
-                showMessage('❌ Error al exportar las órdenes: ' + error.message, 'error');
-            }
-        }
-
-        /**
-         * Maneja la selección de archivo para importación
-         */
-        function handleFileSelect(files) {
-            if (files.length === 0) return;
-            
-            const file = files[0];
-            selectedBackupFile = file;
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const fileContent = e.target.result;
-                    const backupData = JSON.parse(fileContent);
-                    
-                    // Validar estructura básica del archivo
-                    if (!backupData.metadata) {
-                        throw new Error('El archivo no tiene la estructura válida de respaldo');
-                    }
-                    
-                    // Mostrar información del archivo
-                    const fileInfo = document.getElementById('file-info');
-                    fileInfo.innerHTML = `
-                        <strong>📄 Archivo seleccionado:</strong> ${file.name}<br>
-                        <strong>📅 Fecha de exportación:</strong> ${new Date(backupData.metadata.exportDate).toLocaleString()}<br>
-                        <strong>📊 Tipo:</strong> ${backupData.metadata.type || 'completo'}<br>
-                        <strong>🔢 Órdenes incluidas:</strong> ${backupData.metadata.totalOrders || 'N/A'}<br>
-                        <strong>🔄 Contador OT:</strong> ${backupData.metadata.otCounter || 'N/A'}
-                    `;
-                    fileInfo.style.display = 'block';
-                    
-                    // Mostrar botón de importación
-                    document.getElementById('import-button').style.display = 'block';
-                    
-                    showMessage('✅ Archivo de respaldo válido detectado', 'success');
-                    
-                } catch (error) {
-                    console.error('Error al leer el archivo:', error);
-                    showMessage('❌ Error: El archivo seleccionado no es un respaldo válido', 'error');
-                    document.getElementById('import-button').style.display = 'none';
+                if (!initial) {
+                     alert('🎉 Estructura del formulario y contador guardados exitosamente en la nube.');
+                     renderWorkOrderForm();
                 }
-            };
-            
-            reader.onerror = function() {
-                showMessage('❌ Error al leer el archivo', 'error');
-                document.getElementById('import-button').style.display = 'none';
-            };
-            
-            reader.readAsText(file);
+            } catch (e) {
+                console.error("Error al guardar la estructura:", e);
+                alert("Error al guardar la estructura en Firebase.");
+            }
+        }
+        
+        // MODIFICADA: Lógica de Roles
+        function getRoleFromEmail(email) {
+            if (ADMIN_EMAILS.includes(email)) {
+                return 'admin';
+            } 
+            else if (VIEWER_EMAILS.includes(email)) { 
+                return 'viewer'; 
+            } 
+            else {
+                return 'normal'; 
+            }
         }
 
-        /**
-         * Importa la base de datos desde un archivo JSON
-         */
-        async function importDatabase() {
-            if (!selectedBackupFile) {
-                showMessage('❌ No hay archivo seleccionado', 'error');
-                return;
-            }
-            
-            if (!confirm('⚠️ ADVERTENCIA CRÍTICA:\n\nEsta acción SOBREESCRIBIRÁ TODOS los datos actuales.\n\n¿Está absolutamente seguro de que desea continuar?\n\nRecomendación: Realice un respaldo antes de proceder.')) {
-                return;
-            }
+        // SIN CAMBIOS MAYORES
+        async function login() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const errorElement = document.getElementById('login-error');
+            errorElement.textContent = '';
             
             try {
-                showMessage('⏳ Iniciando importación de datos...', 'info');
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, pass);
+                const user = userCredential.user;
                 
-                const reader = new FileReader();
+                let role = getRoleFromEmail(user.email); 
                 
-                reader.onload = async function(e) {
-                    try {
-                        const backupData = JSON.parse(e.target.result);
-                        
-                        // Validar datos
-                        if (!backupData.workOrders || !Array.isArray(backupData.workOrders)) {
-                            throw new Error('Estructura de datos inválida');
-                        }
-                        
-                        // Mostrar progreso
-                        showMessage(`🔄 Importando ${backupData.workOrders.length} órdenes...`, 'info');
-                        
-                        // 1. Limpiar la base de datos actual
-                        await clearDatabase();
-                        
-                        // 2. Importar órdenes de trabajo
-                        let importedCount = 0;
-                        for (const order of backupData.workOrders) {
-                            try {
-                                // Remover el ID existente para que Firestore genere uno nuevo
-                                const { id, ...orderData } = order;
-                                await ORDERS_COLLECTION.add(orderData);
-                                importedCount++;
-                            } catch (error) {
-                                console.error('Error importando orden:', error);
-                            }
-                        }
-                        
-                        // 3. Actualizar configuración si está incluida
-                        if (backupData.config) {
-                            await CONFIG_COLLECTION.doc("systemConfig").set(backupData.config, { merge: true });
-                        }
-                        
-                        // 4. Recargar datos
-                        await loadInitialData();
-                        
-                        showMessage(`✅ Importación completada: ${importedCount} órdenes importadas`, 'success');
-                        
-                        // Actualizar estadísticas
-                        updateBackupStats();
-                        
-                    } catch (error) {
-                        console.error('Error durante la importación:', error);
-                        showMessage('❌ Error durante la importación: ' + error.message, 'error');
-                    }
-                };
+                currentRole = role;
                 
-                reader.readAsText(selectedBackupFile);
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                initializeApp(role);
                 
             } catch (error) {
-                console.error('Error al importar la base de datos:', error);
-                showMessage('❌ Error al importar la base de datos: ' + error.message, 'error');
-            }
-        }
-
-        /**
-         * Limpia toda la base de datos
-         */
-        async function clearDatabase() {
-            try {
-                // Eliminar todas las órdenes
-                const ordersSnapshot = await ORDERS_COLLECTION.get();
-                const deletePromises = ordersSnapshot.docs.map(doc => doc.ref.delete());
-                await Promise.all(deletePromises);
-                
-                showMessage('🗑️ Base de datos anterior limpiada', 'info');
-                
-            } catch (error) {
-                console.error('Error al limpiar la base de datos:', error);
-                throw new Error('No se pudo limpiar la base de datos: ' + error.message);
-            }
-        }
-
-        /**
-         * Sincroniza datos locales con Firebase
-         */
-        async function syncToFirebase() {
-            try {
-                showMessage('⏳ Sincronizando con Firebase...', 'info');
-                
-                // Aquí puedes implementar lógica específica de sincronización
-                // Por ahora, simplemente guardamos la estructura actual
-                await saveFormStructure(true);
-                
-                showMessage('✅ Datos sincronizados con Firebase', 'success');
-                
-            } catch (error) {
-                console.error('Error en sincronización:', error);
-                showMessage('❌ Error al sincronizar con Firebase: ' + error.message, 'error');
-            }
-        }
-
-        /**
-         * Carga datos desde Firebase
-         */
-        async function loadFromFirebase() {
-            try {
-                showMessage('⏳ Cargando datos desde Firebase...', 'info');
-                
-                await loadInitialData();
-                updateBackupStats();
-                
-                showMessage('✅ Datos cargados desde Firebase', 'success');
-                
-            } catch (error) {
-                console.error('Error al cargar desde Firebase:', error);
-                showMessage('❌ Error al cargar desde Firebase: ' + error.message, 'error');
-            }
-        }
-
-        /**
-         * Actualiza las estadísticas en la interfaz
-         */
-        function updateBackupStats() {
-            const statsContainer = document.getElementById('backup-stats');
-            
-            const stats = [
-                { label: 'Órdenes Totales', value: workOrders.length, icon: '📋' },
-                { label: 'Contador Actual', value: otCounter, icon: '🔢' },
-                { label: 'Secciones Formulario', value: formStructure ? formStructure.length : 0, icon: '📝' },
-                { label: 'Campos Dinámicos', value: formStructure ? formStructure.reduce((acc, sec) => acc + sec.fields.length, 0) : 0, icon: '⚙️' }
-            ];
-            
-            statsContainer.innerHTML = stats.map(stat => `
-                <div class="stat-card">
-                    <div class="stat-number">${stat.icon} ${stat.value}</div>
-                    <div class="stat-label">${stat.label}</div>
-                </div>
-            `).join('');
-        }
-
-        /**
-         * Muestra mensajes en la interfaz
-         */
-        function showMessage(message, type = 'info') {
-            const messagesContainer = document.getElementById('backup-messages');
-            const messageDiv = document.createElement('div');
-            
-            messageDiv.className = `backup-${type}`;
-            messageDiv.textContent = message;
-            
-            messagesContainer.appendChild(messageDiv);
-            
-            // Auto-eliminar después de 10 segundos
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.parentNode.removeChild(messageDiv);
+                console.error("Error de autenticación:", error.code, error.message);
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    errorElement.textContent = 'Credenciales incorrectas o usuario no encontrado.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorElement.textContent = 'El formato del correo es inválido.';
+                } else if (error.code === 'auth/api-key-not-valid') {
+                    errorElement.textContent = 'ERROR DE CONFIGURACIÓN: La Clave API de Firebase no es válida. Por favor, verifique la configuración de Firebase en el código.';
+                } else {
+                    errorElement.textContent = 'Error de conexión. Intente de nuevo.';
                 }
-            }, 10000);
+            }
         }
 
-        // *** 3. MODIFICACIONES EN initializeApp PARA MOSTRAR LA NUEVA PESTAÑA ***
+        // SIN CAMBIOS
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                alert('Sesión cerrada correctamente.');
+            }).catch((error) => {
+                console.error("Error al cerrar sesión:", error);
+                alert('Error al cerrar sesión.');
+            });
+        }
 
         // MODIFICADA: Control de visibilidad de pestañas para los 3 roles
         async function initializeApp(role) {
@@ -940,7 +645,6 @@
 
             document.getElementById('edit-tab-button').style.display = (role === 'admin') ? 'inline-block' : 'none';
             document.getElementById('new-order-tab-button').style.display = isCreator ? 'inline-block' : 'none';
-            document.getElementById('backup-tab-button').style.display = (role === 'admin') ? 'inline-block' : 'none';
             
             await loadInitialData(); 
             
@@ -955,15 +659,1250 @@
             
             renderWorkOrderForm();
             renderOrdersTable();
-            updateBackupStats(); // Actualizar estadísticas al inicializar
         }
 
-        // *** 4. EL RESTO DEL CÓDIGO PERMANECE IGUAL ***
-        // [Aquí iría el resto del código existente: loadInitialData, saveFormStructure, 
-        // getRoleFromEmail, login, logout, openTab, renderFormEditor, renderWorkOrderForm, 
-        // generateWorkOrder, generatePDF, etc.]
+        // MODIFICADA: Usa getRoleFromEmail() para los 3 roles
+        window.onload = function() {
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    let role = getRoleFromEmail(user.email); 
+                    currentRole = role;
+                    
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'block';
+                    initializeApp(role);
+                } else {
+                    currentRole = null;
+                    document.getElementById('main-app').style.display = 'none';
+                    document.getElementById('login-view').style.display = 'block';
+                }
+            });
+        }
+        
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            if (evt) evt.currentTarget.className += " active";
 
-        // ... (el resto del código permanece igual)
+            if (tabName === 'new-order' && formStructure) renderWorkOrderForm();
+            else if (tabName === 'view-orders') renderOrdersTable();
+            else if (tabName === 'edit-form' && currentRole === 'admin' && formStructure) renderFormEditor();
+        }
+        
+        // *** 4. LÓGICA DE EDICIÓN DE FORMULARIO (ADMIN) ***
+
+        function renderFormEditor() {
+            const editorDiv = document.getElementById('form-editor');
+            editorDiv.innerHTML = '';
+
+            formStructure.forEach((section, secIndex) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'form-section';
+                sectionDiv.innerHTML = `
+                    <h4>Sección ${secIndex + 1}: <input type="text" value="${section.title}" oninput="updateSectionTitle(${secIndex}, this.value)" style="width: 70%; display: inline;"></h4>
+                    <button onclick="addField(${secIndex}, 'text')">➕ Agregar Campo de Texto</button>
+                    <button onclick="addField(${secIndex}, 'select')">➕ Agregar Lista (Select)</button>
+                    <button onclick="addField(${secIndex}, 'date-input')">📅 Agregar Campo de Fecha</button>
+                    <button onclick="addField(${secIndex}, 'textarea')">📝 Agregar Área de Texto</button>
+                    <hr>
+                    <div id="fields-container-${secIndex}"></div>
+                `;
+                editorDiv.appendChild(sectionDiv);
+
+                const fieldsContainer = document.getElementById(`fields-container-${secIndex}`);
+                section.fields.forEach((field, fieldIndex) => {
+                    // user-auto-fill al listado de campos fijos
+                    if (field.type === 'static' || field.type === 'ot_counter' || field.type === 'date-auto' || field.type === 'user-auto-fill') {
+                        fieldsContainer.innerHTML += `<p class="required-fixed-field"><strong>${field.label}</strong> (Campo fijo obligatorio)</p>`;
+                        return;
+                    }
+
+                    const fieldDiv = document.createElement('div');
+                    fieldDiv.className = 'field-editor-item';
+                    fieldDiv.innerHTML = `
+                        <label>Etiqueta:</label>
+                        <input type="text" value="${field.label}" oninput="updateFieldProperty(${secIndex}, ${fieldIndex}, 'label', this.value)">
+                        <label>Tipo:</label>
+                        <select onchange="updateFieldProperty(${secIndex}, ${fieldIndex}, 'type', this.value)">
+                            <option value="text" ${field.type === 'text' ? 'selected' : ''}>Texto (Corto)</option>
+                            <option value="number" ${field.type === 'number' ? 'selected' : ''}>Número</option>
+                            <option value="textarea" ${field.type === 'textarea' ? 'selected' : ''}>Área de Texto (Largo)</option>
+                            <option value="select" ${field.type === 'select' ? 'selected' : ''}>Lista Desplegable (Simple)</option>
+                            <option value="autofill-select" ${field.type === 'autofill-select' ? 'selected' : ''}>Lista (Autollenado Contratista) 📝</option>
+                            <option value="date-input" ${field.type === 'date-input' ? 'selected' : ''}>Fecha (Calendario) 📅</option>
+                        </select>
+                        <label>Clasificación:</label>
+                        <input type="checkbox" id="req-${secIndex}-${fieldIndex}" ${field.required ? 'checked' : ''} onchange="updateFieldProperty(${secIndex}, ${fieldIndex}, 'required', this.checked)"> 
+                        <label for="req-${secIndex}-${fieldIndex}" style="display: inline-block; font-weight: normal;">Obligatorio</label>
+                        
+                        <div id="select-options-${secIndex}-${fieldIndex}" style="margin-top: 10px; ${field.type !== 'select' && field.type !== 'autofill-select' ? 'display: none;' : ''}">
+                            <strong>Opciones de Lista (solo visible si es 'Select' o 'Autofill-Select'). </strong>
+                            ${field.type === 'autofill-select' ? 
+                                '<p style="color: var(--color-error);">⚠️ **Autollenado:** Las opciones se toman de `CONTRATISTAS_DATA` y anulan esta lista.</p>' : ''
+                            }
+                            <input type="text" value="${(field.options || []).join(', ')}" oninput="updateSelectOptions(${secIndex}, ${fieldIndex}, this.value)">
+                        </div>
+                        <button onclick="removeField(${secIndex}, ${fieldIndex})" style="background-color: var(--color-error); color: var(--color-white);">🗑️ Eliminar Campo</button>
+                    `;
+                    fieldsContainer.appendChild(fieldDiv);
+                });
+            });
+        }
+        
+        function updateSectionTitle(secIndex, newTitle) { formStructure[secIndex].title = newTitle; }
+
+        function updateFieldProperty(secIndex, fieldIndex, prop, value) {
+            formStructure[secIndex].fields[fieldIndex][prop] = value;
+            if (prop === 'type') {
+                if ((value === 'select' || value === 'autofill-select') && !formStructure[secIndex].fields[fieldIndex].options) {
+                    formStructure[secIndex].fields[fieldIndex].options = ['Opción A', 'Opción B'];
+                }
+                renderFormEditor();
+            }
+        }
+
+        function updateSelectOptions(secIndex, fieldIndex, value) {
+            formStructure[secIndex].fields[fieldIndex].options = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        }
+
+        function addField(secIndex, type) {
+            const newField = {
+                id: `dynamic_field_${Date.now()}`,
+                label: `Nuevo Campo ${type === 'select' || type === 'autofill-select' ? 'Lista' : (type === 'date-input' ? 'Fecha' : (type === 'textarea' ? 'Texto Largo' : 'Texto'))}`,
+                type: type,
+                required: false
+            };
+            if (type === 'select' || type === 'autofill-select') newField.options = ['Opción A', 'Opción B'];
+            formStructure[secIndex].fields.push(newField);
+            renderFormEditor();
+        }
+
+        function removeField(secIndex, fieldIndex) {
+            // user-auto-fill al listado de campos fijos
+            const isFixed = formStructure[secIndex].fields[fieldIndex].type === 'static' || 
+                            formStructure[secIndex].fields[fieldIndex].type === 'ot_counter' ||
+                            formStructure[secIndex].fields[fieldIndex].type === 'date-auto' ||
+                            formStructure[secIndex].fields[fieldIndex].type === 'user-auto-fill';
+            
+            // La primera sección tiene los 4 campos fijos iniciales
+            if (secIndex === 0 && isFixed) {
+                alert("🚫 No se pueden eliminar los campos fijos y obligatorios de la primera sección.");
+                return;
+            }
+            if (confirm('¿Estás seguro de que quieres eliminar este campo?')) {
+                formStructure[secIndex].fields.splice(fieldIndex, 1);
+                renderFormEditor();
+            }
+        }
+
+
+        // *** 5. LÓGICA DE CREACIÓN DE ORDEN DE TRABAJO ***
+        
+        // NUEVA FUNCIÓN: Formatea fecha YYYY-MM-DD o DD/MM/YYYY a DD/MM/YYYY
+        function formatDateToDDMMYYYY(dateString) {
+            if (!dateString) return 'N/A';
+            
+            // Si la fecha ya está en formato DD/MM/YYYY, se asume que es la correcta (campos fijos)
+            if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                return dateString;
+            }
+
+            // Para fechas YYYY-MM-DD (inputs de tipo date)
+            const parts = dateString.split('-');
+            if (parts.length === 3) {
+                const [year, month, day] = parts;
+                return `${day}/${month}/${year}`;
+            }
+
+            // Si no coincide con ninguno, devuelve el original
+            return dateString;
+        }
+
+        /**
+         * Obtiene la fecha actual formateada para la zona horaria de Caracas (GMT-4).
+         * @returns {string} Fecha en formato DD/MM/AAAA.
+         */
+        function getCurrentCaracasDate() {
+            const now = new Date();
+            // Usamos las opciones de formato y la zona horaria de Caracas para forzar la fecha GMT-4.
+            return now.toLocaleDateString('es-ES', { 
+                timeZone: 'America/Caracas',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+        
+        /**
+         * Función que autocompleta los campos de Responsable y Rif al cambiar la empresa.
+         */
+        function autofillContratistaData(selectElement) {
+            const selectedCompanyName = selectElement.value;
+            const data = CONTRATISTAS_DATA[selectedCompanyName];
+            
+            if (!data) {
+                document.getElementById('Apellido y Nombre del Responsable').value = '';
+                document.getElementById('Rif').value = '';
+                return;
+            }
+
+            const responsibleField = document.getElementById('Apellido y Nombre del Responsable');
+            const rifField = document.getElementById('Rif');
+
+            if (responsibleField && data["Apellido y Nombre del Responsable"] !== undefined) {
+                responsibleField.value = data["Apellido y Nombre del Responsable"];
+            }
+            if (rifField && data["Rif"] !== undefined) {
+                rifField.value = data["Rif"];
+            }
+        }
+
+        // FUNCIÓN CORREGIDA: Ahora calcula correctamente ambos totales por separado
+        function calculateNewTotal(prefix) {
+            // Cálculo para CANTV
+            const precioUnitario = parseFloat(document.getElementById(`${prefix}_precio_unitario`).value.replace(',', '.')) || 0;
+            const puntos = parseFloat(document.getElementById(`${prefix}_puntos`).value.replace(',', '.')) || 0;
+            const total = precioUnitario * puntos;
+            
+            document.getElementById(`${prefix}_total_display`).textContent = total.toFixed(2);
+            document.getElementById(`${prefix}_total_hidden`).value = total.toFixed(2);
+            
+            // Cálculo para EDC (usando los campos con sufijo "1")
+            const precioUnitario1 = parseFloat(document.getElementById(`${prefix}_precio_unitario1`).value.replace(',', '.')) || 0;
+            const puntos1 = parseFloat(document.getElementById(`${prefix}_puntos1`).value.replace(',', '.')) || 0;
+            const total1 = precioUnitario1 * puntos1;
+            
+            document.getElementById(`${prefix}_total_display1`).textContent = total1.toFixed(2);
+            document.getElementById(`${prefix}_total_hidden1`).value = total1.toFixed(2);
+        }
+
+
+        function toggleConditionalSection(type) {
+            const nodeAccessSection = document.getElementById('conditional_node_acceso_section');
+            const ispSection = document.getElementById('conditional_isp_section');
+            const nodeAccessButton = document.getElementById('check_node_acceso');
+            const ispButton = document.getElementById('check_isp');
+
+            // 1. Limpiar y resetear ambas secciones
+            nodeAccessSection.style.display = 'none';
+            ispSection.style.display = 'none';
+            nodeAccessButton.classList.remove('active');
+            ispButton.classList.remove('active');
+            
+            // 2. Resetear inputs y selecciones
+            
+            const fieldsToReset = ['costo_proyectado', 'precio_unitario', 'puntos', 'precio_unitario1', 'puntos1', 'descripcion', 'abono_mensual'];
+            const selectsToReset = ['pago_por_realizado'];
+
+            ['node_acceso', 'isp'].forEach(prefix => {
+                fieldsToReset.forEach(field => {
+                    const el = document.getElementById(`${prefix}_${field}`);
+                    if (el) el.value = '';
+                });
+                selectsToReset.forEach(field => {
+                    const el = document.getElementById(`${prefix}_${field}`);
+                    if (el) el.value = 'Inter'; // Valor por defecto
+                });
+                
+                document.getElementById(`${prefix}_total_display`).textContent = '0.00';
+                document.getElementById(`${prefix}_total_display1`).textContent = '0.00';
+                document.getElementById(`${prefix}_total_hidden`).value = '0.00';
+                document.getElementById(`${prefix}_total_hidden1`).value = '0.00';
+            });
+
+
+            // 3. Mostrar la sección seleccionada
+            if (type === 'node_acceso') {
+                nodeAccessSection.style.display = 'block';
+                nodeAccessButton.classList.add('active');
+            } else if (type === 'isp') {
+                ispSection.style.display = 'block';
+                ispButton.classList.add('active');
+            }
+        }
+
+
+        function renderWorkOrderForm() {
+            const formElement = document.getElementById('work-order-form');
+            formElement.innerHTML = '';
+            const todayCaracas = getCurrentCaracasDate(); 
+            const currentUserEmail = firebase.auth().currentUser ? firebase.auth().currentUser.email : 'USUARIO NO LOGUEADO'; // Obtener email
+
+            if (!formStructure) {
+                 formElement.innerHTML = '<p>Cargando estructura del formulario...</p>';
+                 return;
+            }
+            
+            // Renderizar secciones dinámicas
+            formStructure.forEach(section => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'form-section';
+                sectionDiv.innerHTML = `<h4>${section.title}</h4>`;
+
+                section.fields.forEach(field => {
+                    const requiredStar = field.required ? '<span style="color: var(--color-error); margin-left: 5px;">*</span>' : '';
+                    let inputHTML = '';
+                    let value = '';
+                    let isDisabled = '';
+                    let onChangeEvent = '';
+                    let isAutofillField = false;
+
+                    if (section.title.includes('II. Información de la Contratista')) {
+                        const autofillKeys = ["Apellido y Nombre del Responsable", "Rif"];
+                        if (autofillKeys.includes(field.label)) {
+                            isDisabled = 'disabled';
+                            isAutofillField = true;
+                        } else if (field.type === 'autofill-select') {
+                            onChangeEvent = `onchange="autofillContratistaData(this)"`;
+                        }
+                    }
+
+                    const fieldId = isAutofillField ? field.label : field.id; 
+                    
+                    const isFixedField = field.type === 'static' || field.type === 'ot_counter' || field.type === 'date-auto' || field.type === 'user-auto-fill';
+                    const requiredAttribute = field.required && !isFixedField ? 'required' : '';
+
+
+                    switch (field.type) {
+                        case 'static':
+                            value = field.value;
+                            inputHTML = `<input type="text" value="${value}" disabled>`;
+                            break;
+                        case 'ot_counter':
+                            value = otCounter;
+                            inputHTML = `<input type="text" value="${value}" disabled>`;
+                            break;
+                        // TIPO DE CAMPO: user-auto-fill
+                        case 'user-auto-fill':
+                            value = currentUserEmail;
+                            inputHTML = `<input type="text" value="${value}" disabled>`;
+                            break;
+                        case 'date-auto':
+                            value = todayCaracas;
+                            inputHTML = `<input type="text" value="${value}" disabled>`; 
+                            break;
+                        case 'date-input':
+                            inputHTML = `<input type="date" id="${fieldId}" name="${fieldId}" ${requiredAttribute} ${isDisabled}>`;
+                            break;
+                        case 'text':
+                        case 'number':
+                            inputHTML = `<input type="${field.type}" id="${fieldId}" name="${fieldId}" ${requiredAttribute} ${isDisabled}>`;
+                            break;
+                        case 'textarea':
+                            inputHTML = `<textarea id="${fieldId}" name="${fieldId}" ${requiredAttribute} ${isDisabled} style="min-height: 100px;"></textarea>`;
+                            break;
+                        case 'select':
+                            inputHTML = `<select id="${fieldId}" name="${fieldId}" ${requiredAttribute} ${isDisabled} ${onChangeEvent}>
+                                ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                            </select>`;
+                            break;
+                        case 'autofill-select': 
+                            const optionsHTML = Object.keys(CONTRATISTAS_DATA).map(key => `<option value="${key}">${key}</option>`).join('');
+                            inputHTML = `<select id="${fieldId}" name="${fieldId}" ${requiredAttribute} ${isDisabled} ${onChangeEvent}>
+                                ${optionsHTML}
+                            </select>`;
+                            break;
+                    }
+
+                    sectionDiv.innerHTML += `<p><label for="${fieldId}">${field.label}${requiredStar}:</label>${inputHTML}</p>`;
+                });
+                formElement.appendChild(sectionDiv);
+            });
+            
+            // AÑADIR BOTONES DE CHECK CONDICIONAL AL FINAL
+            formElement.innerHTML += `
+                <h4>Tipo de Construcción (Selección Única)</h4>
+                <button type="button" class="conditional-check" id="check_node_acceso" onclick="toggleConditionalSection('node_acceso')">
+                    La Construcción es de un Nodo de Acceso
+                </button>
+                <button type="button" class="conditional-check" id="check_isp" onclick="toggleConditionalSection('isp')">
+                    La Construcción es de un ISP
+                </button>
+                <button type="button" style="background-color: var(--color-error); color: var(--color-white); margin-top: 15px;" onclick="toggleConditionalSection(null)">
+                    ❌ Eliminar / Desmarcar Selección
+                </button>
+            `;
+            
+            // --- SECCIÓN CONDICIONAL: CONSTRUCCIÓN NODO DE ACCESO ---
+            formElement.innerHTML += renderConditionalSection('node_acceso', 'Datos Condicionales: La Construcción es de Nodo de Acceso');
+
+            // --- SECCIÓN CONDICIONAL: CONSTRUCCIÓN ISP ---
+            formElement.innerHTML += renderConditionalSection('isp', 'Datos Condicionales: La Construcción es de un ISP');
+            
+            // Inicializar las secciones ocultas
+            toggleConditionalSection(null);
+            
+            // Inicializar autollenado con el valor por defecto
+            const autofillSelects = document.querySelectorAll('select[onchange="autofillContratistaData(this)"]');
+            autofillSelects.forEach(select => autofillContratistaData(select));
+        }
+
+        // FUNCIÓN ACTUALIZADA: Ahora incluye títulos separados para CANTV y EDC
+        function renderConditionalSection(prefix, title) {
+            const onChangeFunc = `calculateNewTotal('${prefix}')`;
+            
+            return `
+                <div class="form-section" id="conditional_${prefix}_section" style="display: none;">
+                    <h4>${title}</h4>
+                    
+                    <p><label for="${prefix}_costo_proyectado">Costo Proyectado de la Obra (*):</label>
+                        <input type="text" id="${prefix}_costo_proyectado" name="${prefix}_costo_proyectado" required></p>
+                    
+                    <p><label for="${prefix}_pago_por_realizado">Pago realizado por (*):</label>
+                        <select id="${prefix}_pago_por_realizado" name="${prefix}_pago_por_realizado" required>
+                            <option value="Inter">Inter</option>
+                            <option value="Cliente">Cliente</option>
+                        </select></p>
+                        
+                    <hr>
+                    
+                    <!-- SECCIÓN CANTV -->
+                    <h5>Pago x VGT CANTV</h5>
+                    <div class="calculation-group">
+                        <label for="${prefix}_precio_unitario">Precio Unitario (*):</label>
+                        <input type="number" step="0.01" min="0" id="${prefix}_precio_unitario" name="${prefix}_precio_unitario" placeholder="0.00" oninput="${onChangeFunc}" class="calculation-input" required>
+                        
+                        <span class="formula-symbol">X</span>
+                        
+                        <label for="${prefix}_puntos">Puntos (*):</label>
+                        <input type="number" step="1" min="0" id="${prefix}_puntos" name="${prefix}_puntos" placeholder="0" oninput="${onChangeFunc}" class="calculation-input" required>
+                        
+                        <span class="formula-symbol">=</span>
+                        
+                        <div class="calculation-total-section">
+                            <label style="flex-basis: auto;">Pago x VGT CANTV a cargo de Inter (*):</label>
+                            <div id="${prefix}_total_display" class="total-display">0.00</div>
+                            <input type="hidden" id="${prefix}_total_hidden" name="${prefix}_total_hidden" value="0.00">
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- SECCIÓN EDC -->
+                    <h5>Pago x VGT EDC</h5>
+                    <div class="calculation-group">
+                        <label for="${prefix}_precio_unitario1">Precio Unitario (*):</label>
+                        <input type="number" step="0.01" min="0" id="${prefix}_precio_unitario1" name="${prefix}_precio_unitario1" placeholder="0.00" oninput="${onChangeFunc}" class="calculation-input" required>
+                        
+                        <span class="formula-symbol">X</span>
+                        
+                        <label for="${prefix}_puntos1">Puntos (*):</label>
+                        <input type="number" step="1" min="0" id="${prefix}_puntos1" name="${prefix}_puntos1" placeholder="0" oninput="${onChangeFunc}" class="calculation-input" required>
+                        
+                        <span class="formula-symbol">=</span>
+                        
+                        <div class="calculation-total-section">
+                            <label style="flex-basis: auto;">Pago x VGT EDC a cargo de Inter (*):</label>
+                            <div id="${prefix}_total_display1" class="total-display">0.00</div>
+                            <input type="hidden" id="${prefix}_total_hidden1" name="${prefix}_total_hidden1" value="0.00">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <p><label for="${prefix}_descripcion">Descripción (*):</label>
+                        <textarea id="${prefix}_descripcion" name="${prefix}_descripcion" required style="min-height: 120px;"></textarea></p>
+                    
+                    <p><label for="${prefix}_abono_mensual">Abono Mensual a Recibir por el cliente (*):</label>
+                        <input type="text" id="${prefix}_abono_mensual" name="${prefix}_abono_mensual" required></p>
+                        
+                </div>
+            `;
+        }
+
+        // SIN CAMBIOS
+        function sanitizeInput(str) {
+            if (typeof str !== 'string' || !str) return str;
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/'/g, '&#039;');
+        }
+
+
+        async function generateWorkOrder() {
+            const form = document.getElementById('work-order-form');
+            const selectedType = document.querySelector('.conditional-check.active');
+            let firstInvalidField = null;
+
+            // 1. VALIDACIÓN DE CAMPOS DINÁMICOS Y AUTOLENADOS 
+            for (const section of formStructure) {
+                for (const field of section.fields) {
+                    // user-auto-fill al listado de campos fijos
+                    const isFixed = field.type === 'static' || field.type === 'ot_counter' || field.type === 'date-auto' || field.type === 'user-auto-fill';
+                    
+                    if (!field.required || isFixed) continue;
+
+                    let fieldId = (section.title.includes('II. Información de la Contratista') && (field.label === 'Apellido y Nombre del Responsable' || field.label === 'Rif')) 
+                                ? field.label 
+                                : field.id;
+                    
+                    const inputElement = document.getElementById(fieldId);
+
+                    if (inputElement && !inputElement.disabled && !inputElement.checkValidity()) {
+                        firstInvalidField = inputElement;
+                        break; 
+                    }
+                }
+                if (firstInvalidField) break; 
+            }
+
+            // 2. VALIDACIÓN DE SECCIÓN CONDICIONAL
+            if (!firstInvalidField && selectedType) {
+                const prefix = selectedType.id.replace('check_', '');
+                const camposCondicionales = [
+                    document.getElementById(`${prefix}_costo_proyectado`),
+                    document.getElementById(`${prefix}_pago_por_realizado`),
+                    document.getElementById(`${prefix}_precio_unitario`),
+                    document.getElementById(`${prefix}_puntos`),
+                    document.getElementById(`${prefix}_precio_unitario1`),
+                    document.getElementById(`${prefix}_puntos1`),
+                    document.getElementById(`${prefix}_descripcion`),
+                    document.getElementById(`${prefix}_abono_mensual`)
+                ];
+
+                for (const campo of camposCondicionales) {
+                    if (campo.type === 'text' || campo.type === 'select' || campo.tagName === 'TEXTAREA' || campo.type === 'date') {
+                        if (!campo.value.trim()) {
+                            firstInvalidField = campo;
+                            break;
+                        }
+                    } 
+                    else if (campo.type === 'number') {
+                        const numericValue = parseFloat(campo.value.replace(',', '.'));
+                        if (isNaN(numericValue) || numericValue < 0) {
+                            firstInvalidField = campo;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 3. MANEJO DEL ERROR
+            if (firstInvalidField) {
+                alert('⚠️ Atención: Debe completar los campos obligatorios faltantes marcados con (*). El sistema lo llevará al primer error.');
+                
+                firstInvalidField.reportValidity();
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidField.focus();
+                return;
+            }
+
+            const formData = new FormData(form);
+            const orderData = {};
+            
+            // Obtener datos fijos
+            const caracasDate = getCurrentCaracasDate(); 
+            const currentUserEmail = firebase.auth().currentUser ? firebase.auth().currentUser.email : 'ERROR'; // Obtener email
+
+            // 4. Recopilar datos estáticos y dinámicos del formulario principal - CORREGIDO
+            formStructure.forEach(section => {
+                section.fields.forEach(field => {
+                    let value;
+                    let fieldId = (section.title.includes('II. Información de la Contratista') && (field.label === 'Apellido y Nombre del Responsable' || field.label === 'Rif')) 
+                                ? field.label 
+                                : field.id;
+
+                    if (field.type === 'ot_counter') value = otCounter.toString();
+                    // TIPO DE CAMPO: user-auto-fill
+                    else if (field.type === 'user-auto-fill') value = currentUserEmail; 
+                    else if (field.type === 'date-auto') value = caracasDate;
+                    else if (field.type === 'static') value = field.value;
+                    else {
+                        const inputElement = document.getElementById(fieldId);
+                        value = inputElement ? inputElement.value : formData.get(fieldId);
+                    }
+                    
+                    // Aplicar formato de fecha DD/MM/AAAA para todos los campos de fecha guardados
+                    // CORRECCIÓN: Verificar que value no sea null/undefined/string vacío
+                    if (field.type === 'date-input' && value && value.trim() !== '') {
+                        orderData[field.label] = formatDateToDDMMYYYY(value);
+                    } else {
+                        // CORRECCIÓN: Asegurar que siempre haya un valor válido
+                        const sanitizedValue = sanitizeInput(value);
+                        orderData[field.label] = (sanitizedValue && sanitizedValue.trim() !== '') ? sanitizedValue : 'N/A';
+                    }
+                });
+            });
+            
+            // 5. Recopilar datos de la sección condicional seleccionada 
+            orderData['Tipo de Construcción Seleccionada'] = selectedType ? selectedType.textContent.trim() : 'Ninguno';
+
+            if (selectedType) {
+                const prefix = selectedType.id.replace('check_', '');
+                
+                calculateNewTotal(prefix); 
+
+                orderData[`${prefix} | Costo Proyectado de la Obra`] = sanitizeInput(document.getElementById(`${prefix}_costo_proyectado`).value) || 'N/A';
+                orderData[`${prefix} | Pago realizado por`] = sanitizeInput(document.getElementById(`${prefix}_pago_por_realizado`).value) || 'N/A';
+                
+                // Guardar ambos totales calculados
+                orderData[`${prefix} | Pago x VGT CANTV a cargo de Inter`] = formData.get(`${prefix}_total_hidden`) || '0.00';
+                orderData[`${prefix} | Pago x VGT EDC a cargo de Inter`] = formData.get(`${prefix}_total_hidden1`) || '0.00';
+
+                orderData[`${prefix} | Precio Unitario CANTV`] = parseFloat(document.getElementById(`${prefix}_precio_unitario`).value.replace(',', '.')).toFixed(2) || '0.00';
+                orderData[`${prefix} | Puntos CANTV`] = parseFloat(document.getElementById(`${prefix}_puntos`).value.replace(',', '.')).toFixed(0) || '0'; 
+                
+                orderData[`${prefix} | Precio Unitario EDC`] = parseFloat(document.getElementById(`${prefix}_precio_unitario1`).value.replace(',', '.')).toFixed(2) || '0.00';
+                orderData[`${prefix} | Puntos EDC`] = parseFloat(document.getElementById(`${prefix}_puntos1`).value.replace(',', '.')).toFixed(0) || '0'; 
+
+                orderData[`${prefix} | Descripción`] = sanitizeInput(document.getElementById(`${prefix}_descripcion`).value) || 'N/A';
+                orderData[`${prefix} | Abono Mensual a Recibir por el cliente`] = sanitizeInput(document.getElementById(`${prefix}_abono_mensual`).value) || 'N/A';
+            }
+
+
+            // 6. **GUARDAR EN FIREBASE**
+            console.log("Datos a guardar en Firebase:", orderData); // Para debugging
+            
+            try {
+                const docRef = await ORDERS_COLLECTION.add(orderData); 
+                
+                // 7. Actualizar array local y contador
+                orderData.id = docRef.id; 
+                workOrders.push(orderData);
+                otCounter++;
+                
+                // 8. Guardar la nueva estructura/contador
+                await saveFormStructure(true); 
+
+                // 9. Generar PDF - CORREGIDO
+                console.log('Generando PDF para nueva orden...');
+                await generatePDF(orderData);
+                console.log('PDF generado exitosamente');
+
+                // 10. Reiniciar UI
+                form.reset();
+                renderWorkOrderForm(); 
+                renderOrdersTable(); 
+                
+                alert('✅ Orden de Trabajo creada exitosamente y PDF generado.');
+                
+            } catch (e) {
+                console.error("Error al crear la orden:", e);
+                console.error("Detalles completos del error:", e.message, e.stack);
+                
+                let errorMessage = "Error al guardar la orden de trabajo en Firebase. ";
+                
+                if (e.code === 'permission-denied') {
+                    errorMessage += "Error de permisos. Verifique las reglas de seguridad de Firestore.";
+                } else if (e.code === 'unavailable') {
+                    errorMessage += "Error de conexión. Verifique su conexión a internet.";
+                } else {
+                    errorMessage += `Detalles: ${e.message}`;
+                }
+                
+                alert(errorMessage);
+            }
+        }
+
+        // *** 6. GENERACIÓN DE PDF CORREGIDA ***
+
+        // *** FUNCIÓN: Formatear texto largo para PDF ***
+        function formatLongTextForPDF(text, maxLineLength = 80) {
+            if (!text || text === 'N/A') return 'N/A';
+            
+            // Convertir saltos de línea HTML a saltos de línea reales
+            let formattedText = text.replace(/<br\s*\/?>/gi, '\n');
+            
+            // Si el texto es corto, devolverlo tal cual
+            if (formattedText.length <= maxLineLength) {
+                return formattedText;
+            }
+            
+            // Dividir el texto en líneas más cortas si es muy largo
+            const words = formattedText.split(' ');
+            let lines = [];
+            let currentLine = '';
+            
+            words.forEach(word => {
+                if ((currentLine + ' ' + word).length <= maxLineLength) {
+                    currentLine += (currentLine ? ' ' : '') + word;
+                } else {
+                    if (currentLine) lines.push(currentLine);
+                    currentLine = word;
+                }
+            });
+            
+            if (currentLine) lines.push(currentLine);
+            
+            return lines.join('\n');
+        }
+
+        function generatePDF(data) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const otNumber = data['Orden de Trabajo'];
+                    const creationDate = data['Fecha Actual'] || 'N/A';
+                    const fileName = `Orden_Trabajo_${otNumber}_${creationDate.replace(/\//g, '-')}.pdf`;
+                    
+                    console.log('Iniciando generación de PDF para orden:', otNumber);
+
+                    // Crear un contenedor invisible pero en el DOM
+                    const printContainer = document.createElement('div');
+                    printContainer.id = 'pdf-print-container';
+                    printContainer.style.cssText = `
+                        position: absolute;
+                        left: -9999px;
+                        top: 0;
+                        width: 210mm;
+                        min-height: 297mm;
+                        background: white;
+                        padding: 20mm;
+                        font-family: Arial, sans-serif;
+                        box-sizing: border-box;
+                        line-height: 1.4;
+                    `;
+
+                    // Construir el contenido HTML completo
+                    let formContentHTML = `
+                        <div style="font-family: 'Arial', sans-serif; color: #36454F; line-height: 1.4; width: 100%;">
+                            <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px;">${data['Título del Formulario']} Nro. ${otNumber}</h1>
+                            
+                            <div style="text-align: right; margin-bottom: 25px; font-weight: bold; color: #555;">
+                                Fecha de Emisión: ${data['Fecha Actual']}
+                            </div>
+                    `;
+
+                    // Contenido del Formulario por Secciones (Dinámicas)
+                    formStructure.forEach((section, secIndex) => {
+                        
+                        formContentHTML += `<div style="margin-bottom: 25px; width: 100%;">`;
+                        formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${section.title}</h3>`;
+                        formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
+                        
+                        section.fields.forEach(field => {
+                            const label = field.label;
+                            let value = data[label] || 'N/A';
+                            
+                            // OMITIR CAMPOS DEL ENCABEZADO
+                            if (label === 'Título del Formulario' || label === 'Orden de Trabajo' || label === 'Fecha Actual') return;
+                            
+                            // APLICAR FORMATO DE FECHA
+                            const fieldDefinition = section.fields.find(f => f.label === label);
+                            if (fieldDefinition && fieldDefinition.type === 'date-input' && value !== 'N/A') {
+                                value = formatDateToDDMMYYYY(value);
+                            }
+                            
+                            // DETECTAR CAMPOS DE TEXTO LARGO
+                            const isLongText = field.type === 'textarea' || 
+                                              /descripción|descripcion|detallada|detallado|observación|observacion|comentario|notas|detalle/i.test(label);
+                            
+                            let valueCellStyle = "padding: 10px 8px; vertical-align: top; border: 1px solid #B0C4DE;";
+                            let labelCellStyle = "padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%; border: 1px solid #B0C4DE;";
+                            
+                            if (isLongText) {
+                                valueCellStyle += " word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 50px;";
+                                value = formatLongTextForPDF(value);
+                            }
+
+                            formContentHTML += `
+                                <tr>
+                                    <td style="${labelCellStyle}">${label}:</td>
+                                    <td style="${valueCellStyle} width: 65%;">${value}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        formContentHTML += '</table></div>';
+                    });
+                    
+                    // Contenido de las Secciones Condicionales (Fijas)
+                    const type = data['Tipo de Construcción Seleccionada'];
+                    if (type && type !== 'Ninguno') {
+                        const prefix = type.includes('Nodo') ? 'node_acceso' : 'isp';
+                        
+                        const pagoVgtCANTV = data[`${prefix} | Pago x VGT CANTV a cargo de Inter`] || '0.00';
+                        const pagoVgtEDC = data[`${prefix} | Pago x VGT EDC a cargo de Inter`] || '0.00'; 
+                        
+                        const descripcionFormateada = formatLongTextForPDF(data[`${prefix} | Descripción`]);
+
+                        formContentHTML += `<div style="margin-bottom: 25px; width: 100%;">`;
+                        formContentHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 15px; border-left: 4px solid #4682B4; padding-left: 10px;">${type}</h3>`;
+                        formContentHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">`;
+
+                        formContentHTML += `
+                            <tr>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%; border: 1px solid #B0C4DE;">Costo Proyectado de la Obra:</td>
+                                <td style="padding: 10px 8px; width: 65%; border: 1px solid #B0C4DE;">${data[`${prefix} | Costo Proyectado de la Obra`]}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Pago realizado por:</td>
+                                <td style="padding: 10px 8px; border: 1px solid #B0C4DE;">${data[`${prefix} | Pago realizado por`]}</td>
+                            </tr>
+                            
+                            <tr style="background-color: #e0f7fa;">
+                                <td style="padding: 12px 8px; font-weight: bold; border: 1px solid #B0C4DE;">Pago x VGT CANTV a cargo de Inter:</td>
+                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6; border: 1px solid #B0C4DE;">${pagoVgtCANTV}</td>
+                            </tr>
+                            
+                            <tr style="background-color: #e0f7fa;">
+                                <td style="padding: 12px 8px; font-weight: bold; border: 1px solid #B0C4DE;">Pago x VGT EDC a cargo de Inter:</td>
+                                <td style="padding: 12px 8px; font-weight: bold; background-color: #ADD8E6; border: 1px solid #B0C4DE;">${pagoVgtEDC}</td>
+                            </tr>
+                            
+                            <tr>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Descripción:</td>
+                                <td style="padding: 10px 8px; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.5; min-height: 80px; border: 1px solid #B0C4DE;">${descripcionFormateada}</td>
+                            </tr>
+                            
+                            <tr>
+                                <td style="padding: 10px 8px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">Abono Mensual a Recibir por el cliente:</td>
+                                <td style="padding: 10px 8px; border: 1px solid #B0C4DE;">${data[`${prefix} | Abono Mensual a Recibir por el cliente`]}</td>
+                            </tr>
+                        `;
+
+                        formContentHTML += '</table></div>';
+                    }
+
+                    // SECCIÓN DE FIRMAS
+                    formContentHTML += `
+                        <div style="margin-top: 60px; padding-top: 30px; border-top: 2px dashed #B0C4DE; width: 100%;">
+                            <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: bold; width: 100%;">
+                                <div style="width: 45%;">
+                                    Firma Contratista:
+                                    <div style="border-top: 1px solid #36454F; margin-top: 5px; padding-top: 30px;"></div>
+                                </div>
+                                <div style="width: 45%;">
+                                    Firma Responsable:
+                                    <div style="border-top: 1px solid #36454F; margin-top: 5px; padding-top: 30px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    formContentHTML += '</div>';
+
+                    // Asignar el contenido al contenedor
+                    printContainer.innerHTML = formContentHTML;
+                    
+                    // Agregar al DOM para que se renderice
+                    document.body.appendChild(printContainer);
+
+                    console.log('Contenedor PDF creado y agregado al DOM');
+
+                    const opt = {
+                        margin:       10,
+                        filename:     fileName,
+                        image:        { 
+                            type: 'jpeg', 
+                            quality: 0.98 
+                        },
+                        html2canvas:  { 
+                            scale: 2,
+                            useCORS: true,
+                            logging: false,
+                            scrollX: 0,
+                            scrollY: 0,
+                            // CONFIGURACIÓN CRÍTICA: Asegurar que el elemento sea visible para html2canvas
+                            onclone: function(clonedDoc) {
+                                const clonedContainer = clonedDoc.getElementById('pdf-print-container');
+                                if (clonedContainer) {
+                                    clonedContainer.style.position = 'relative';
+                                    clonedContainer.style.left = '0';
+                                    clonedContainer.style.top = '0';
+                                }
+                            }
+                        },
+                        jsPDF:        { 
+                            unit: 'mm', 
+                            format: 'a4', 
+                            orientation: 'portrait',
+                            compress: true
+                        }
+                    };
+
+                    // Usar setTimeout para asegurar que el DOM se haya actualizado completamente
+                    setTimeout(() => {
+                        console.log('Generando PDF desde elemento...');
+                        
+                        // Asegurar que el contenedor sea visible para html2canvas
+                        const tempContainer = document.getElementById('pdf-print-container');
+                        if (tempContainer) {
+                            tempContainer.style.position = 'relative';
+                            tempContainer.style.left = '0';
+                            tempContainer.style.top = '0';
+                        }
+                        
+                        html2pdf()
+                            .set(opt)
+                            .from(printContainer)
+                            .save()
+                            .then(() => {
+                                console.log('PDF generado y descargado exitosamente:', fileName);
+                                // Limpiar el contenedor temporal
+                                if (document.body.contains(printContainer)) {
+                                    document.body.removeChild(printContainer);
+                                }
+                                resolve();
+                            })
+                            .catch(error => {
+                                console.error('Error al generar PDF:', error);
+                                // Limpiar el contenedor temporal incluso en error
+                                if (document.body.contains(printContainer)) {
+                                    document.body.removeChild(printContainer);
+                                }
+                                reject(error);
+                            });
+                    }, 1000); // Aumentar el tiempo de espera para asegurar la renderización
+
+                } catch (error) {
+                    console.error('Error en generatePDF:', error);
+                    // Limpiar el contenedor temporal en caso de error
+                    const printContainer = document.getElementById('pdf-print-container');
+                    if (printContainer && document.body.contains(printContainer)) {
+                        document.body.removeChild(printContainer);
+                    }
+                    reject(error);
+                }
+            });
+        }
+        
+        // *** FUNCIÓN downloadOrder CORREGIDA ***
+        function downloadOrder(orderId) {
+            console.log('Intentando descargar orden ID:', orderId);
+            
+            const order = workOrders.find(o => o.id === orderId);
+            if (order) {
+                console.log('Orden encontrada, generando PDF...');
+                generatePDF(order).then(() => {
+                    console.log('PDF descargado exitosamente');
+                }).catch(error => {
+                    console.error('Error al generar PDF:', error);
+                    alert('Error al generar el PDF. Por favor, intente nuevamente.');
+                });
+            } else {
+                console.error('Orden no encontrada con ID:', orderId);
+                alert('No se encontró la Orden de Trabajo para descargar.');
+            }
+        }
+        
+        // *** 7. LÓGICA DE ELIMINACIÓN Y CONTADOR ***
+
+        function recalculateOtCounter() {
+            if (workOrders.length === 0) {
+                otCounter = 1;
+                return;
+            }
+
+            // Extraer todos los números de orden y convertirlos a números
+            const allOtNumbers = workOrders.map(order => {
+                const otNumber = order['Orden de Trabajo'];
+                return typeof otNumber === 'string' ? parseInt(otNumber, 10) : otNumber;
+            }).filter(ot => !isNaN(ot)); // Filtrar valores no numéricos
+
+            if (allOtNumbers.length === 0) {
+                otCounter = 1;
+                return;
+            }
+
+            // Encontrar el máximo número de orden
+            const maxOt = Math.max(...allOtNumbers);
+            
+            // Verificar si hay duplicados
+            const uniqueOtNumbers = [...new Set(allOtNumbers)];
+            if (uniqueOtNumbers.length !== allOtNumbers.length) {
+                console.warn('⚠️ Se detectaron números de orden duplicados en la base de datos');
+                
+                // Encontrar el siguiente número disponible (sin duplicados)
+                let nextAvailable = maxOt + 1;
+                while (allOtNumbers.includes(nextAvailable)) {
+                    nextAvailable++;
+                }
+                otCounter = nextAvailable;
+            } else {
+                otCounter = maxOt + 1;
+            }
+            
+            console.log(`Contador recalculado: ${otCounter} (Máximo encontrado: ${maxOt})`);
+        }
+
+        async function deleteWorkOrder(orderId, otNumber) {
+            // Solo Administrador puede eliminar
+            if (currentRole !== 'admin') {
+                alert('🚫 Permiso denegado. Solo un administrador puede eliminar órdenes. Refuerce las reglas de seguridad de Firestore.');
+                return;
+            }
+
+            if (!confirm(`¿Está seguro de que desea eliminar la Orden de Trabajo Nro. ${otNumber}? Esta acción es irreversible y ajustará el contador.`)) {
+                return;
+            }
+            
+            try {
+                await ORDERS_COLLECTION.doc(orderId).delete();
+                workOrders = workOrders.filter(order => order.id !== orderId);
+                recalculateOtCounter();
+                await saveFormStructure(true); // Se usa true porque no debe mostrar mensaje de éxito al guardar el contador
+                renderOrdersTable();
+                renderWorkOrderForm(); 
+
+                alert(`✅ Orden de Trabajo Nro. ${otNumber} eliminada y contador actualizado a ${otCounter}.`);
+
+            } catch (e) {
+                console.error("Error al eliminar la orden:", e);
+                alert("Error al eliminar la Orden de Trabajo de Firebase. Detalles: " + e.message);
+            }
+        }
+
+        function renderOrdersTable() {
+            const tbody = document.getElementById('orders-table').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            // Ordenar las órdenes por número de OT de forma descendente
+            const sortedOrders = [...workOrders].sort((a, b) => {
+                const otA = parseInt(a['Orden de Trabajo'], 10) || 0;
+                const otB = parseInt(b['Orden de Trabajo'], 10) || 0;
+                return otB - otA; // Orden descendente (más recientes primero)
+            });
+
+            sortedOrders.forEach(order => {
+                const row = tbody.insertRow();
+                row.insertCell().textContent = order['Orden de Trabajo'];
+                row.insertCell().textContent = order['Título del Formulario'];
+                const creationDate = order['Fecha Actual'] || 'N/A';
+                row.insertCell().textContent = creationDate;
+                
+                const actionCell = row.insertCell();
+                
+                // Botón de Descarga PDF
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = '⬇️ PDF';
+                downloadBtn.style.backgroundColor = '#77DD77'; 
+                downloadBtn.style.color = 'white';
+                downloadBtn.onclick = () => {
+                    console.log('Botón PDF clickeado para orden:', order.id);
+                    downloadOrder(order.id);
+                };
+                actionCell.appendChild(downloadBtn);
+                
+                // Botón de Eliminar (Solo para Admin)
+                if (currentRole === 'admin') {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = '🗑️ Eliminar';
+                    deleteBtn.style.backgroundColor = 'var(--color-error)';
+                    deleteBtn.style.color = 'white';
+                    deleteBtn.style.marginLeft = '5px';
+                    deleteBtn.onclick = () => deleteWorkOrder(order.id, order['Orden de Trabajo']);
+                    actionCell.appendChild(deleteBtn);
+                }
+            });
+        }
+
+        // *** 8. FUNCIÓN PARA LIMPIAR DUPLICADOS ***
+        async function cleanDuplicateOrders() {
+            if (currentRole !== 'admin') {
+                alert('Solo administradores pueden ejecutar esta función');
+                return;
+            }
+            
+            if (!confirm('¿Está seguro de que desea limpiar órdenes duplicadas? Esta acción eliminará todas las órdenes con números duplicados, manteniendo solo la más reciente de cada número.')) {
+                return;
+            }
+            
+            try {
+                const ordersSnapshot = await ORDERS_COLLECTION.get();
+                const allOrders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Encontrar duplicados por número de OT
+                const otCounts = {};
+                allOrders.forEach(order => {
+                    const otNumber = order['Orden de Trabajo'];
+                    if (!otCounts[otNumber]) {
+                        otCounts[otNumber] = [];
+                    }
+                    otCounts[otNumber].push(order);
+                });
+                
+                const duplicates = Object.entries(otCounts).filter(([ot, orders]) => orders.length > 1);
+                
+                if (duplicates.length === 0) {
+                    alert('No se encontraron órdenes duplicadas');
+                    return;
+                }
+                
+                console.log('Duplicados encontrados:', duplicates);
+                
+                // Eliminar duplicados (mantener el más reciente por fecha de creación)
+                let deletedCount = 0;
+                for (const [otNumber, orders] of duplicates) {
+                    // Ordenar por fecha (mantener el más reciente)
+                    const sorted = orders.sort((a, b) => {
+                        const dateA = new Date(a['Fecha Actual'] || 0);
+                        const dateB = new Date(b['Fecha Actual'] || 0);
+                        return dateB - dateA;
+                    });
+                    
+                    // Eliminar todos excepto el primero (más reciente)
+                    for (let i = 1; i < sorted.length; i++) {
+                        await ORDERS_COLLECTION.doc(sorted[i].id).delete();
+                        deletedCount++;
+                        console.log(`Eliminada orden duplicada: ${otNumber} - ID: ${sorted[i].id}`);
+                    }
+                }
+                
+                alert(`Se eliminaron ${deletedCount} órdenes duplicadas. Recargue la página para ver los cambios.`);
+                
+                // Recargar datos
+                await loadInitialData();
+                renderOrdersTable();
+                renderWorkOrderForm();
+                
+            } catch (error) {
+                console.error('Error limpiando duplicados:', error);
+                alert('Error al limpiar duplicados: ' + error.message);
+            }
+        }
+
+        // *** 9. NUEVAS FUNCIONES DE EXPORTACIÓN E IMPORTACIÓN ***
+
+        /**
+         * Exporta toda la base de datos a un archivo JSON
+         */
+        async function exportDatabase() {
+            if (currentRole !== 'admin') {
+                alert('🚫 Permiso denegado. Solo un administrador puede exportar la base de datos.');
+                return;
+            }
+
+            try {
+                // Obtener todas las órdenes
+                const ordersSnapshot = await ORDERS_COLLECTION.get();
+                const ordersData = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Obtener la configuración del sistema
+                const configDoc = await CONFIG_COLLECTION.doc("systemConfig").get();
+                const configData = configDoc.exists ? configDoc.data() : {};
+
+                // Crear objeto con todos los datos
+                const exportData = {
+                    timestamp: new Date().toISOString(),
+                    exportedBy: firebase.auth().currentUser.email,
+                    orders: ordersData,
+                    config: configData
+                };
+
+                // Crear y descargar archivo JSON
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `respaldo_ordenes_trabajo_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Liberar el objeto URL
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                
+                alert(`✅ Base de datos exportada exitosamente. Se descargaron ${ordersData.length} órdenes.`);
+                
+            } catch (error) {
+                console.error('Error al exportar la base de datos:', error);
+                alert('Error al exportar la base de datos: ' + error.message);
+            }
+        }
+
+        /**
+         * Importa datos desde un archivo JSON
+         */
+        async function importDatabase(file) {
+            if (currentRole !== 'admin') {
+                alert('🚫 Permiso denegado. Solo un administrador puede importar la base de datos.');
+                return;
+            }
+
+            if (!file) {
+                return;
+            }
+
+            if (!confirm('⚠️ ADVERTENCIA: Esta acción reemplazará TODOS los datos actuales en la base de datos. ¿Está seguro de que desea continuar?')) {
+                return;
+            }
+
+            try {
+                const fileText = await readFileAsText(file);
+                const importData = JSON.parse(fileText);
+
+                // Validar estructura básica del archivo
+                if (!importData.orders || !importData.config) {
+                    alert('El archivo seleccionado no tiene el formato correcto para importar.');
+                    return;
+                }
+
+                // Mostrar confirmación final
+                if (!confirm(`Se importarán ${importData.orders.length} órdenes y la configuración del sistema. ¿Continuar?`)) {
+                    return;
+                }
+
+                // Limpiar la base de datos actual
+                await clearDatabase();
+
+                // Importar configuración
+                await CONFIG_COLLECTION.doc("systemConfig").set(importData.config);
+
+                // Importar órdenes
+                let importedCount = 0;
+                for (const order of importData.orders) {
+                    // Remover el ID original para crear nuevos documentos
+                    const { id, ...orderData } = order;
+                    await ORDERS_COLLECTION.add(orderData);
+                    importedCount++;
+                }
+
+                // Recargar la aplicación
+                await loadInitialData();
+                renderOrdersTable();
+                renderWorkOrderForm();
+
+                alert(`✅ Base de datos importada exitosamente. Se importaron ${importedCount} órdenes.`);
+
+            } catch (error) {
+                console.error('Error al importar la base de datos:', error);
+                alert('Error al importar la base de datos: ' + error.message);
+            }
+        }
+
+        /**
+         * Lee un archivo como texto
+         */
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(e);
+                reader.readAsText(file);
+            });
+        }
+
+        /**
+         * Limpia toda la base de datos
+         */
+        async function clearDatabase() {
+            try {
+                // Eliminar todas las órdenes
+                const ordersSnapshot = await ORDERS_COLLECTION.get();
+                const deletePromises = ordersSnapshot.docs.map(doc => ORDERS_COLLECTION.doc(doc.id).delete());
+                await Promise.all(deletePromises);
+
+                // Eliminar configuración
+                await CONFIG_COLLECTION.doc("systemConfig").delete();
+
+                console.log('Base de datos limpiada exitosamente');
+            } catch (error) {
+                console.error('Error al limpiar la base de datos:', error);
+                throw error;
+            }
+        }
 
     </script>
 
