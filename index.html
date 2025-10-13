@@ -1448,7 +1448,16 @@
                             useCORS: true,
                             logging: false,
                             scrollX: 0,
-                            scrollY: 0
+                            scrollY: 0,
+                            // CONFIGURACIÓN CRÍTICA: Asegurar que el elemento sea visible para html2canvas
+                            onclone: function(clonedDoc) {
+                                const clonedContainer = clonedDoc.getElementById('pdf-print-container');
+                                if (clonedContainer) {
+                                    clonedContainer.style.position = 'relative';
+                                    clonedContainer.style.left = '0';
+                                    clonedContainer.style.top = '0';
+                                }
+                            }
                         },
                         jsPDF:        { 
                             unit: 'mm', 
@@ -1458,9 +1467,17 @@
                         }
                     };
 
-                    // Usar setTimeout para asegurar que el DOM se haya actualizado
+                    // Usar setTimeout para asegurar que el DOM se haya actualizado completamente
                     setTimeout(() => {
                         console.log('Generando PDF desde elemento...');
+                        
+                        // Asegurar que el contenedor sea visible para html2canvas
+                        const tempContainer = document.getElementById('pdf-print-container');
+                        if (tempContainer) {
+                            tempContainer.style.position = 'relative';
+                            tempContainer.style.left = '0';
+                            tempContainer.style.top = '0';
+                        }
                         
                         html2pdf()
                             .set(opt)
@@ -1482,7 +1499,7 @@
                                 }
                                 reject(error);
                             });
-                    }, 500);
+                    }, 1000); // Aumentar el tiempo de espera para asegurar la renderización
 
                 } catch (error) {
                     console.error('Error en generatePDF:', error);
