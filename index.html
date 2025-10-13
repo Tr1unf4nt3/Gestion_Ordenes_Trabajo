@@ -23,6 +23,7 @@
             --color-error: #FF6961;      /* Rojo pastel para errores */
             --color-success: #77DD77;    /* Verde pastel para éxito */
             --color-warning: #FFB347;    /* Naranja pastel para advertencias */
+            --color-filter: #DDA0DD;     /* Color para elementos de filtro */
         }
 
         /* Estilos Generales (Diseño Pastel) */
@@ -248,6 +249,90 @@
             margin: 10px 0;
         }
 
+        /* NUEVOS ESTILOS PARA FILTROS */
+        .filters-section {
+            border: 2px solid var(--color-filter);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #faf0ff;
+        }
+        
+        .filters-section h4 {
+            color: var(--color-filter);
+            border-bottom: 1px solid var(--color-filter);
+            margin-top: 0;
+        }
+        
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--color-text);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        .filter-button {
+            background-color: var(--color-filter);
+            color: var(--color-white);
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .filter-button:hover {
+            background-color: #ba55d3;
+        }
+        
+        .active-filters {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: var(--color-bg);
+            border-radius: 6px;
+            border-left: 4px solid var(--color-filter);
+        }
+        
+        .active-filter-tag {
+            display: inline-block;
+            background-color: var(--color-filter);
+            color: var(--color-white);
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        
+        .active-filter-tag .remove-filter {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .range-inputs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .range-inputs input {
+            flex: 1;
+        }
+
     </style>
 </head>
 <body>
@@ -283,12 +368,63 @@
         <!-- Pestaña 2: Visualización de Órdenes de Trabajo -->
         <div id="view-orders" class="tabcontent">
             <h3>Registro Histórico de Órdenes</h3>
+            
+            <!-- NUEVA SECCIÓN: Filtros Dinámicos -->
+            <div class="filters-section">
+                <h4>🔍 Filtros de Búsqueda</h4>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="filter-field">Campo a filtrar:</label>
+                        <select id="filter-field" onchange="updateFilterInput()">
+                            <option value="">Seleccionar campo...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filter-operator">Tipo de filtro:</label>
+                        <select id="filter-operator" onchange="updateFilterInput()">
+                            <option value="contains">Contiene texto</option>
+                            <option value="equals">Es igual a</option>
+                            <option value="startsWith">Comienza con</option>
+                            <option value="endsWith">Termina con</option>
+                            <option value="range">Rango</option>
+                            <option value="greater">Mayor que</option>
+                            <option value="less">Menor que</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group" id="filter-value-container">
+                        <label for="filter-value">Valor:</label>
+                        <input type="text" id="filter-value" placeholder="Texto a buscar...">
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button class="filter-button" onclick="addFilter()">➕ Agregar Filtro</button>
+                        <button class="filter-button" onclick="clearAllFilters()" style="background-color: var(--color-error);">🗑️ Limpiar Filtros</button>
+                    </div>
+                </div>
+                
+                <div id="active-filters" class="active-filters" style="display: none;">
+                    <strong>Filtros activos:</strong>
+                    <div id="active-filters-list"></div>
+                </div>
+            </div>
+            
             <table id="orders-table">
                 <thead>
-                    <tr><th>Nro. OT</th><th>Título</th><th>Fecha Creación</th><th>Acciones</th></tr>
+                    <tr>
+                        <th>Nro. OT</th>
+                        <th>Título</th>
+                        <th>Fecha Creación</th>
+                        <th>Acciones</th>
+                    </tr>
                 </thead>
                 <tbody></tbody>
             </table>
+            
+            <div id="no-results" style="display: none; text-align: center; padding: 20px; color: var(--color-error);">
+                <p>No se encontraron órdenes que coincidan con los filtros aplicados.</p>
+            </div>
         </div>
 
         <!-- Pestaña 3: Edición de Formulario (Solo Administrador) -->
@@ -342,6 +478,7 @@
         let workOrders = []; 
         let otCounter = 1; 
         let currentRole = null; 
+        let activeFilters = []; // NUEVA: Almacena los filtros activos
 
         // ----------------------------------------------------------------------------------
         // *** CONFIGURACIÓN DE ROLES CON MÚLTIPLES CORREOS (LISTAS/ARRAYS) ***
@@ -693,7 +830,10 @@
             if (evt) evt.currentTarget.className += " active";
 
             if (tabName === 'new-order' && formStructure) renderWorkOrderForm();
-            else if (tabName === 'view-orders') renderOrdersTable();
+            else if (tabName === 'view-orders') {
+                renderOrdersTable();
+                initializeFilters(); // NUEVO: Inicializar filtros cuando se abre la pestaña
+            }
             else if (tabName === 'edit-form' && currentRole === 'admin' && formStructure) renderFormEditor();
         }
         
@@ -1654,14 +1794,58 @@
 
         function renderOrdersTable() {
             const tbody = document.getElementById('orders-table').querySelector('tbody');
+            const noResultsDiv = document.getElementById('no-results');
             tbody.innerHTML = '';
 
+            // Aplicar filtros si existen
+            let filteredOrders = workOrders;
+            if (activeFilters.length > 0) {
+                filteredOrders = workOrders.filter(order => {
+                    return activeFilters.every(filter => {
+                        const fieldValue = order[filter.field] || '';
+                        const filterValue = filter.value;
+                        
+                        switch (filter.operator) {
+                            case 'contains':
+                                return fieldValue.toString().toLowerCase().includes(filterValue.toLowerCase());
+                            case 'equals':
+                                return fieldValue.toString().toLowerCase() === filterValue.toLowerCase();
+                            case 'startsWith':
+                                return fieldValue.toString().toLowerCase().startsWith(filterValue.toLowerCase());
+                            case 'endsWith':
+                                return fieldValue.toString().toLowerCase().endsWith(filterValue.toLowerCase());
+                            case 'range':
+                                const [min, max] = filterValue.split('-').map(v => parseFloat(v.trim()));
+                                const numValue = parseFloat(fieldValue);
+                                return !isNaN(numValue) && numValue >= min && numValue <= max;
+                            case 'greater':
+                                const greaterValue = parseFloat(fieldValue);
+                                const greaterFilter = parseFloat(filterValue);
+                                return !isNaN(greaterValue) && greaterValue > greaterFilter;
+                            case 'less':
+                                const lessValue = parseFloat(fieldValue);
+                                const lessFilter = parseFloat(filterValue);
+                                return !isNaN(lessValue) && lessValue < lessFilter;
+                            default:
+                                return true;
+                        }
+                    });
+                });
+            }
+
             // Ordenar las órdenes por número de OT de forma descendente
-            const sortedOrders = [...workOrders].sort((a, b) => {
+            const sortedOrders = [...filteredOrders].sort((a, b) => {
                 const otA = parseInt(a['Orden de Trabajo'], 10) || 0;
                 const otB = parseInt(b['Orden de Trabajo'], 10) || 0;
                 return otB - otA; // Orden descendente (más recientes primero)
             });
+
+            // Mostrar mensaje si no hay resultados
+            if (sortedOrders.length === 0) {
+                noResultsDiv.style.display = 'block';
+            } else {
+                noResultsDiv.style.display = 'none';
+            }
 
             sortedOrders.forEach(order => {
                 const row = tbody.insertRow();
@@ -1902,6 +2086,255 @@
                 console.error('Error al limpiar la base de datos:', error);
                 throw error;
             }
+        }
+
+        // *** 10. NUEVAS FUNCIONES DE FILTRADO DINÁMICO ***
+
+        /**
+         * Inicializa los filtros dinámicos
+         */
+        function initializeFilters() {
+            const filterFieldSelect = document.getElementById('filter-field');
+            filterFieldSelect.innerHTML = '<option value="">Seleccionar campo...</option>';
+            
+            // Obtener todos los campos disponibles de las órdenes
+            const availableFields = new Set();
+            
+            // Agregar campos básicos
+            availableFields.add('Orden de Trabajo');
+            availableFields.add('Título del Formulario');
+            availableFields.add('Fecha Actual');
+            availableFields.add('Usuario que Crea la Orden');
+            availableFields.add('Tipo de Construcción Seleccionada');
+            
+            // Agregar campos dinámicos del formulario
+            formStructure.forEach(section => {
+                section.fields.forEach(field => {
+                    if (field.type !== 'static' && field.type !== 'ot_counter' && field.type !== 'date-auto' && field.type !== 'user-auto-fill') {
+                        availableFields.add(field.label);
+                    }
+                });
+            });
+            
+            // Agregar campos condicionales
+            availableFields.add('node_acceso | Costo Proyectado de la Obra');
+            availableFields.add('node_acceso | Pago realizado por');
+            availableFields.add('node_acceso | Pago x VGT CANTV a cargo de Inter');
+            availableFields.add('node_acceso | Pago x VGT EDC a cargo de Inter');
+            availableFields.add('node_acceso | Descripción');
+            availableFields.add('node_acceso | Abono Mensual a Recibir por el cliente');
+            availableFields.add('isp | Costo Proyectado de la Obra');
+            availableFields.add('isp | Pago realizado por');
+            availableFields.add('isp | Pago x VGT CANTV a cargo de Inter');
+            availableFields.add('isp | Pago x VGT EDC a cargo de Inter');
+            availableFields.add('isp | Descripción');
+            availableFields.add('isp | Abono Mensual a Recibir por el cliente');
+            
+            // Ordenar campos alfabéticamente y agregar al select
+            Array.from(availableFields).sort().forEach(field => {
+                const option = document.createElement('option');
+                option.value = field;
+                option.textContent = field;
+                filterFieldSelect.appendChild(option);
+            });
+            
+            updateActiveFiltersDisplay();
+        }
+
+        /**
+         * Actualiza la interfaz de filtro según el tipo de campo seleccionado
+         */
+        function updateFilterInput() {
+            const fieldSelect = document.getElementById('filter-field');
+            const operatorSelect = document.getElementById('filter-operator');
+            const valueContainer = document.getElementById('filter-value-container');
+            
+            const selectedField = fieldSelect.value;
+            const selectedOperator = operatorSelect.value;
+            
+            // Limpiar contenedor
+            valueContainer.innerHTML = '';
+            
+            if (!selectedField) {
+                valueContainer.innerHTML = '<label for="filter-value">Valor:</label><input type="text" id="filter-value" placeholder="Seleccione un campo primero...">';
+                return;
+            }
+            
+            // Determinar el tipo de campo basado en la estructura del formulario
+            let fieldType = 'text';
+            
+            // Buscar en campos dinámicos
+            formStructure.forEach(section => {
+                section.fields.forEach(field => {
+                    if (field.label === selectedField) {
+                        fieldType = field.type;
+                    }
+                });
+            });
+            
+            // Campos especiales
+            if (selectedField.includes('Pago x VGT') || selectedField.includes('Costo Proyectado')) {
+                fieldType = 'number';
+            }
+            
+            if (selectedField === 'Fecha Actual') {
+                fieldType = 'date';
+            }
+            
+            const label = document.createElement('label');
+            label.htmlFor = 'filter-value';
+            label.textContent = 'Valor:';
+            valueContainer.appendChild(label);
+            
+            if (selectedOperator === 'range' && (fieldType === 'number' || fieldType === 'date')) {
+                // Input de rango para números y fechas
+                const rangeDiv = document.createElement('div');
+                rangeDiv.className = 'range-inputs';
+                rangeDiv.innerHTML = `
+                    <input type="${fieldType === 'date' ? 'date' : 'number'}" id="filter-value-min" placeholder="Mínimo">
+                    <span style="align-self: center;">a</span>
+                    <input type="${fieldType === 'date' ? 'date' : 'number'}" id="filter-value-max" placeholder="Máximo">
+                `;
+                valueContainer.appendChild(rangeDiv);
+            } else {
+                // Input simple para otros casos
+                let inputType = 'text';
+                if (fieldType === 'number') inputType = 'number';
+                if (fieldType === 'date') inputType = 'date';
+                
+                const input = document.createElement('input');
+                input.type = inputType;
+                input.id = 'filter-value';
+                
+                if (inputType === 'text') {
+                    input.placeholder = 'Texto a buscar...';
+                } else if (inputType === 'number') {
+                    input.placeholder = '0';
+                    input.step = fieldType === 'number' ? '0.01' : '1';
+                }
+                
+                valueContainer.appendChild(input);
+            }
+        }
+
+        /**
+         * Agrega un nuevo filtro
+         */
+        function addFilter() {
+            const fieldSelect = document.getElementById('filter-field');
+            const operatorSelect = document.getElementById('filter-operator');
+            const selectedField = fieldSelect.value;
+            const selectedOperator = operatorSelect.value;
+            
+            if (!selectedField) {
+                alert('Por favor, seleccione un campo para filtrar.');
+                return;
+            }
+            
+            let filterValue = '';
+            
+            if (selectedOperator === 'range') {
+                const minValue = document.getElementById('filter-value-min').value;
+                const maxValue = document.getElementById('filter-value-max').value;
+                
+                if (!minValue || !maxValue) {
+                    alert('Por favor, complete ambos valores para el rango.');
+                    return;
+                }
+                
+                filterValue = `${minValue}-${maxValue}`;
+            } else {
+                const valueInput = document.getElementById('filter-value');
+                filterValue = valueInput.value.trim();
+                
+                if (!filterValue) {
+                    alert('Por favor, ingrese un valor para el filtro.');
+                    return;
+                }
+            }
+            
+            // Verificar si el filtro ya existe
+            const existingFilter = activeFilters.find(f => 
+                f.field === selectedField && f.operator === selectedOperator && f.value === filterValue
+            );
+            
+            if (existingFilter) {
+                alert('Este filtro ya está activo.');
+                return;
+            }
+            
+            // Agregar el filtro
+            activeFilters.push({
+                field: selectedField,
+                operator: selectedOperator,
+                value: filterValue
+            });
+            
+            // Actualizar la interfaz
+            updateActiveFiltersDisplay();
+            renderOrdersTable();
+            
+            // Limpiar los inputs
+            fieldSelect.value = '';
+            operatorSelect.value = 'contains';
+            updateFilterInput();
+        }
+
+        /**
+         * Elimina un filtro específico
+         */
+        function removeFilter(index) {
+            activeFilters.splice(index, 1);
+            updateActiveFiltersDisplay();
+            renderOrdersTable();
+        }
+
+        /**
+         * Limpia todos los filtros
+         */
+        function clearAllFilters() {
+            activeFilters = [];
+            updateActiveFiltersDisplay();
+            renderOrdersTable();
+        }
+
+        /**
+         * Actualiza la visualización de filtros activos
+         */
+        function updateActiveFiltersDisplay() {
+            const activeFiltersDiv = document.getElementById('active-filters');
+            const activeFiltersList = document.getElementById('active-filters-list');
+            
+            if (activeFilters.length === 0) {
+                activeFiltersDiv.style.display = 'none';
+                return;
+            }
+            
+            activeFiltersDiv.style.display = 'block';
+            activeFiltersList.innerHTML = '';
+            
+            activeFilters.forEach((filter, index) => {
+                const filterTag = document.createElement('span');
+                filterTag.className = 'active-filter-tag';
+                
+                let operatorText = '';
+                switch (filter.operator) {
+                    case 'contains': operatorText = 'contiene'; break;
+                    case 'equals': operatorText = 'es igual a'; break;
+                    case 'startsWith': operatorText = 'comienza con'; break;
+                    case 'endsWith': operatorText = 'termina con'; break;
+                    case 'range': operatorText = 'está entre'; break;
+                    case 'greater': operatorText = 'es mayor que'; break;
+                    case 'less': operatorText = 'es menor que'; break;
+                }
+                
+                filterTag.innerHTML = `
+                    <strong>${filter.field}</strong> ${operatorText} "${filter.value}"
+                    <span class="remove-filter" onclick="removeFilter(${index})">×</span>
+                `;
+                
+                activeFiltersList.appendChild(filterTag);
+            });
         }
 
     </script>
