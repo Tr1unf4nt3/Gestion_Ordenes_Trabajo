@@ -2904,75 +2904,219 @@
             }
         }
 
-        // NUEVA FUNCIÓN: Generar PDF de certificación
+        // FUNCIÓN CORREGIDA: Generar PDF de certificación
         function generateCertificationPDF(data) {
             return new Promise((resolve, reject) => {
                 try {
                     const fileName = `Certificacion_Obra_${data.orderNumber}_${getCurrentCaracasDate().replace(/\//g, '-')}.pdf`;
                     
+                    console.log('Generando PDF de certificación con datos:', data);
+
+                    // Crear un contenedor invisible pero en el DOM
                     const printContainer = document.createElement('div');
                     printContainer.id = 'certification-pdf-print-container';
                     printContainer.style.cssText = `
                         position: absolute;
                         left: -9999px;
                         top: 0;
-                        width: 190mm;
-                        min-height: 277mm;
+                        width: 210mm;
+                        min-height: 297mm;
                         background: white;
-                        padding: 10mm;
+                        padding: 15mm;
                         font-family: Arial, sans-serif;
                         box-sizing: border-box;
                         line-height: 1.4;
                         font-size: 12px;
                     `;
 
+                    // Construir el contenido HTML completo
                     let certificationHTML = `
                         <div style="font-family: 'Arial', sans-serif; color: #36454F; line-height: 1.4; width: 100%;">
-                            <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px; font-size: 18px;">
-                                Certificación de Obra - Nro. ${data.certification_number}
-                            </h1>
-                            
-                            <div style="text-align: right; margin-bottom: 25px; font-weight: bold; color: #555; font-size: 12px;">
-                                Fecha de Emisión: ${data.certification_date}
+                            <!-- Encabezado principal -->
+                            <div style="text-align: center; margin-bottom: 25px;">
+                                <h1 style="color: #4682B4; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px; font-size: 20px;">
+                                    CERTIFICACIÓN DE OBRA
+                                </h1>
+                                
+                                <div style="text-align: right; font-weight: bold; color: #555; font-size: 12px;">
+                                    Número de Certificación: ${data.certification_number || 'N/A'}
+                                </div>
+                                <div style="text-align: right; font-weight: bold; color: #555; font-size: 12px;">
+                                    Fecha de Emisión: ${data.certification_date || 'N/A'}
+                                </div>
                             </div>
                     `;
 
-                    CERTIFICATION_FORM_STRUCTURE.forEach(section => {
-                        certificationHTML += `<div style="margin-bottom: 20px; width: 100%; page-break-inside: avoid;">`;
-                        certificationHTML += `<h3 style="color: #4682B4; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">${section.title}</h3>`;
-                        certificationHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 11px;">`;
-                        
-                        section.fields.forEach(field => {
-                            const value = data[field.id] || 'N/A';
-                            let valueCellStyle = "padding: 8px 6px; vertical-align: top; border: 1px solid #B0C4DE; font-size: 11px;";
-                            let labelCellStyle = "padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%; border: 1px solid #B0C4DE; font-size: 11px;";
-
-                            if (field.type === 'textarea') {
-                                valueCellStyle += " word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.4; min-height: 40px;";
-                            }
-
-                            certificationHTML += `
-                                <tr>
-                                    <td style="${labelCellStyle}">${field.label}:</td>
-                                    <td style="${valueCellStyle} width: 65%;">${value}</td>
-                                </tr>
-                            `;
-                        });
-                        
-                        certificationHTML += '</table></div>';
-                    });
-
-                    // Firmas en el PDF
+                    // Sección I: Datos de Certificación
                     certificationHTML += `
-                        <div style="margin-top: 40px; padding-top: 20px; border-top: 2px dashed #B0C4DE; width: 100%;">
+                        <div style="margin-bottom: 25px; page-break-inside: avoid;">
+                            <h3 style="color: #4682B4; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">
+                                I. Datos de Certificación
+                            </h3>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 40%; border: 1px solid #B0C4DE;">
+                                        Número de Certificación:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE; width: 60%;">
+                                        ${data.certification_number || 'N/A'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">
+                                        Fecha:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">
+                                        ${data.certification_date || 'N/A'}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+
+                    // Sección II: Identificación
+                    certificationHTML += `
+                        <div style="margin-bottom: 25px; page-break-inside: avoid;">
+                            <h3 style="color: #4682B4; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">
+                                II. Identificación
+                            </h3>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 40%; border: 1px solid #B0C4DE;">
+                                        Empresa:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE; width: 60%;">
+                                        ${data.certification_empresa || 'N/A'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">
+                                        Apellido y Nombre del Responsable:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">
+                                        ${data.certification_responsable || 'N/A'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">
+                                        Rif:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">
+                                        ${data.certification_rif || 'N/A'}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+
+                    // Sección III: Información del Proyecto
+                    certificationHTML += `
+                        <div style="margin-bottom: 25px; page-break-inside: avoid;">
+                            <h3 style="color: #4682B4; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">
+                                III. Información del Proyecto
+                            </h3>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 40%; border: 1px solid #B0C4DE;">
+                                        Referencia Orden de Trabajo:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE; width: 60%;">
+                                        ${data.certification_reference || 'N/A'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">
+                                        Fecha de Inicio:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">
+                                        ${data.start_date ? formatDateToDDMMYYYY(data.start_date) : 'N/A'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">
+                                        Fecha de finalización:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">
+                                        ${data.end_date ? formatDateToDDMMYYYY(data.end_date) : 'N/A'}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+
+                    // Sección IV: Detalle de los trabajos
+                    certificationHTML += `
+                        <div style="margin-bottom: 25px; page-break-inside: avoid;">
+                            <h3 style="color: #4682B4; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">
+                                IV. Detalle de los trabajos
+                            </h3>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 40%; border: 1px solid #B0C4DE;">
+                                        Conceptos Ejecutados en el período de tiempo:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE; width: 60%; word-wrap: break-word; white-space: pre-wrap; min-height: 80px;">
+                                        ${data.conceptos_ejecutados || 'N/A'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">
+                                        Total Acreditado en Certificación:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">
+                                        ${data.total_acreditado || 'N/A'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">
+                                        Porcentaje sobre el presupuesto total:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">
+                                        ${data.porcentaje_presupuesto || 'N/A'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; border: 1px solid #B0C4DE;">
+                                        Importe final acreditado en la construcción:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">
+                                        ${data.importe_final || 'N/A'}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+
+                    // Sección V: Desviaciones y Justificación
+                    certificationHTML += `
+                        <div style="margin-bottom: 25px; page-break-inside: avoid;">
+                            <h3 style="color: #4682B4; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">
+                                V. Desviaciones y Justificación
+                            </h3>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <tr>
+                                    <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 40%; border: 1px solid #B0C4DE;">
+                                        Desviaciones y Justificación:
+                                    </td>
+                                    <td style="padding: 8px 6px; border: 1px solid #B0C4DE; width: 60%; word-wrap: break-word; white-space: pre-wrap; min-height: 120px;">
+                                        ${data.desviaciones_justificacion || 'N/A'}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+
+                    // Firmas
+                    certificationHTML += `
+                        <div style="margin-top: 60px; padding-top: 20px; border-top: 2px dashed #B0C4DE; width: 100%; page-break-inside: avoid;">
                             <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; width: 100%;">
                                 <div style="width: 45%; text-align: center;">
                                     Firma Gerente Técnico:
-                                    <div style="border-top: 1px solid #36454F; margin-top: 60px; padding-top: 10px;"></div>
+                                    <div style="border-top: 1px solid #36454F; margin-top: 60px; padding-top: 10px; width: 80%; margin-left: auto; margin-right: auto;"></div>
                                 </div>
                                 <div style="width: 45%; text-align: center;">
                                     Firma Jefe Técnico:
-                                    <div style="border-top: 1px solid #36454F; margin-top: 60px; padding-top: 10px;"></div>
+                                    <div style="border-top: 1px solid #36454F; margin-top: 60px; padding-top: 10px; width: 80%; margin-left: auto; margin-right: auto;"></div>
                                 </div>
                             </div>
                         </div>
@@ -2980,35 +3124,61 @@
 
                     certificationHTML += '</div>';
 
+                    // Asignar el contenido al contenedor
                     printContainer.innerHTML = certificationHTML;
+                    
+                    // Agregar al DOM para que se renderice
                     document.body.appendChild(printContainer);
 
+                    console.log('Contenedor PDF de certificación creado y agregado al DOM');
+
                     const opt = {
-                        margin: 10,
-                        filename: fileName,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, logging: false },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        margin:       15,
+                        filename:     fileName,
+                        image:        { 
+                            type: 'jpeg', 
+                            quality: 0.98 
+                        },
+                        html2canvas:  { 
+                            scale: 2,
+                            useCORS: true,
+                            logging: true,
+                            scrollX: 0,
+                            scrollY: 0
+                        },
+                        jsPDF:        { 
+                            unit: 'mm', 
+                            format: 'a4', 
+                            orientation: 'portrait',
+                            compress: true
+                        }
                     };
 
+                    // Usar setTimeout para asegurar que el DOM se haya actualizado completamente
                     setTimeout(() => {
+                        console.log('Generando PDF de certificación desde elemento...');
+                        
                         html2pdf()
                             .set(opt)
                             .from(printContainer)
                             .save()
                             .then(() => {
+                                console.log('PDF de certificación generado y descargado exitosamente:', fileName);
+                                // Limpiar el contenedor temporal
                                 if (document.body.contains(printContainer)) {
                                     document.body.removeChild(printContainer);
                                 }
                                 resolve();
                             })
                             .catch(error => {
+                                console.error('Error al generar PDF de certificación:', error);
+                                // Limpiar el contenedor temporal incluso en error
                                 if (document.body.contains(printContainer)) {
                                     document.body.removeChild(printContainer);
                                 }
                                 reject(error);
                             });
-                    }, 1000);
+                    }, 2000); // Aumentar el tiempo de espera
 
                 } catch (error) {
                     console.error('Error en generateCertificationPDF:', error);
