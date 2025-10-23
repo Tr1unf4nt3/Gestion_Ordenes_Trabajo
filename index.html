@@ -2731,7 +2731,7 @@
 
         // *** 11. NUEVAS FUNCIONES PARA CERTIFICACIÓN ***
 
-        // NUEVA FUNCIÓN: Renderizar formulario de certificación
+        // FUNCIÓN MEJORADA: Renderizar formulario de certificación
         function renderCertificationForm() {
             const formElement = document.getElementById('certification-work-form');
             formElement.innerHTML = '';
@@ -2771,11 +2771,13 @@
                             case 'certification_reference':
                                 value = currentOrderForCertification['Orden de Trabajo'] || '';
                                 break;
+                            default:
+                                value = field.value || '';
                         }
-                        inputHTML = `<input type="text" value="${value}" disabled>`;
+                        inputHTML = `<input type="text" id="${field.id}" value="${value}" disabled>`;
                     } else if (field.type === 'date-auto') {
                         value = todayCaracas;
-                        inputHTML = `<input type="text" value="${value}" disabled>`;
+                        inputHTML = `<input type="text" id="${field.id}" value="${value}" disabled>`;
                     } else {
                         const requiredAttribute = field.required ? 'required' : '';
                         if (field.type === 'textarea') {
@@ -2828,10 +2830,9 @@
             openTab(null, 'view-orders');
         }
 
-        // NUEVA FUNCIÓN: Generar certificación (MEJORADA)
+        // FUNCIÓN CORREGIDA: Generar certificación
         async function generateCertification() {
             const form = document.getElementById('certification-work-form');
-            const formData = new FormData(form);
             
             // Validar campos requeridos
             let firstInvalidField = null;
@@ -2839,7 +2840,7 @@
                 section.fields.forEach(field => {
                     if (field.required && field.type !== 'static' && field.type !== 'date-auto') {
                         const inputElement = document.getElementById(field.id);
-                        if (inputElement && !inputElement.checkValidity()) {
+                        if (inputElement && !inputElement.value.trim()) {
                             if (!firstInvalidField) firstInvalidField = inputElement;
                         }
                     }
@@ -2848,13 +2849,12 @@
 
             if (firstInvalidField) {
                 alert('⚠️ Atención: Debe completar todos los campos obligatorios marcados con (*).');
-                firstInvalidField.reportValidity();
                 firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 firstInvalidField.focus();
                 return;
             }
 
-            // Recopilar datos del formulario
+            // Recopilar datos del formulario CORREGIDO
             const certificationData = {
                 orderId: currentOrderForCertification.id,
                 orderNumber: currentOrderForCertification['Orden de Trabajo'],
@@ -2862,26 +2862,29 @@
                 certificacion_completa: true
             };
 
+            // Recopilar todos los campos del formulario
             CERTIFICATION_FORM_STRUCTURE.forEach(section => {
                 section.fields.forEach(field => {
-                    if (field.type === 'static' || field.type === 'date-auto') {
-                        const inputElement = document.getElementById(field.id);
-                        certificationData[field.id] = inputElement ? inputElement.value : '';
-                    } else {
-                        const value = formData.get(field.id) || '';
-                        // CORRECCIÓN: Asegurar formato correcto para fechas
-                        if (field.type === 'date-input' && value) {
-                            certificationData[field.id] = formatDateToDDMMYYYY(value);
+                    const inputElement = document.getElementById(field.id);
+                    if (inputElement) {
+                        if (field.type === 'static' || field.type === 'date-auto') {
+                            certificationData[field.id] = inputElement.value;
                         } else {
-                            certificationData[field.id] = value;
+                            let value = inputElement.value;
+                            // Formatear fechas correctamente
+                            if (field.type === 'date-input' && value) {
+                                certificationData[field.id] = formatDateToDDMMYYYY(value);
+                            } else {
+                                certificationData[field.id] = value;
+                            }
                         }
                     }
                 });
             });
 
+            console.log('Datos de certificación a guardar:', certificationData);
+
             try {
-                console.log('Guardando certificación en Firebase...', certificationData);
-                
                 // Guardar certificación en Firebase
                 await CERTIFICATIONS_COLLECTION.add(certificationData);
                 
@@ -2898,7 +2901,6 @@
                     workOrders[orderIndex].fecha_finalizacion = new Date().toISOString();
                 }
 
-                console.log('Generando PDF de certificación...');
                 // Generar PDF de certificación
                 await generateCertificationPDF(certificationData);
 
@@ -2913,7 +2915,7 @@
             }
         }
 
-        // NUEVA FUNCIÓN: Generar PDF de certificación (CORREGIDA)
+        // FUNCIÓN MEJORADA: Generar PDF de certificación
         function generateCertificationPDF(data) {
             return new Promise((resolve, reject) => {
                 try {
@@ -2952,12 +2954,19 @@
                         certificationHTML += `<table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 11px;">`;
                         
                         section.fields.forEach(field => {
-                            const value = data[field.id] || 'N/A';
+                            let value = data[field.id] || 'N/A';
+                            
+                            // Formatear valores vacíos
+                            if (!value || value.trim() === '') {
+                                value = 'N/A';
+                            }
+                            
                             let valueCellStyle = "padding: 8px 6px; vertical-align: top; border: 1px solid #B0C4DE; font-size: 11px;";
                             let labelCellStyle = "padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; vertical-align: top; width: 35%; border: 1px solid #B0C4DE; font-size: 11px;";
 
                             if (field.type === 'textarea') {
                                 valueCellStyle += " word-wrap: break-word; word-break: break-word; white-space: pre-wrap; line-height: 1.4; min-height: 40px;";
+                                value = formatLongTextForPDF(value, 70);
                             }
 
                             certificationHTML += `
@@ -2992,6 +3001,8 @@
                     printContainer.innerHTML = certificationHTML;
                     document.body.appendChild(printContainer);
 
+                    console.log('Contenido HTML del PDF de certificación:', certificationHTML);
+
                     const opt = {
                         margin: 10,
                         filename: fileName,
@@ -3003,7 +3014,6 @@
                             scale: 2, 
                             useCORS: true, 
                             logging: false,
-                            // CORRECCIÓN: Agregar configuración para asegurar que se renderice correctamente
                             onclone: function(clonedDoc) {
                                 const clonedContainer = clonedDoc.getElementById('certification-pdf-print-container');
                                 if (clonedContainer) {
@@ -3021,14 +3031,12 @@
                         }
                     };
 
-                    // CORRECCIÓN: Usar then/catch en lugar de setTimeout para manejar correctamente la promesa
                     html2pdf()
                         .set(opt)
                         .from(printContainer)
                         .save()
                         .then(() => {
                             console.log('PDF de certificación generado exitosamente');
-                            // Limpiar el contenedor después de que se complete la generación
                             if (document.body.contains(printContainer)) {
                                 document.body.removeChild(printContainer);
                             }
@@ -3036,7 +3044,6 @@
                         })
                         .catch(error => {
                             console.error('Error al generar PDF de certificación:', error);
-                            // Limpiar el contenedor incluso en error
                             if (document.body.contains(printContainer)) {
                                 document.body.removeChild(printContainer);
                             }
