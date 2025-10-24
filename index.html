@@ -2227,8 +2227,8 @@
                 }
             }
             
-            document.getElementById('contractor-company').value = companyName;
-            document.getElementById('contractor-rif').value = companyRif;
+            document.getElementById('contractor-company').value = companyName || 'No especificada';
+            document.getElementById('contractor-rif').value = companyRif || 'No especificado';
             
             // Limpiar campos de fecha
             document.getElementById('start-date').value = '';
@@ -2315,15 +2315,17 @@
         }
 
         /**
-         * Genera el PDF de certificación de obras
+         * Genera el PDF de certificación de obras - CORREGIDO
          */
         function generateCertificationPDF(data) {
             return new Promise((resolve, reject) => {
                 try {
-                    const otNumber = data['Orden de Trabajo'];
                     const certificationNumber = data['Certificación']['Número de Certificación'];
                     const fileName = `Certificacion_Obra_${certificationNumber}_${getCurrentCaracasDate().replace(/\//g, '-')}.pdf`;
                     
+                    console.log('Generando PDF de certificación para orden:', certificationNumber);
+                    console.log('Datos de certificación:', data['Certificación']);
+
                     const printContainer = document.createElement('div');
                     printContainer.id = 'certification-pdf-container';
                     printContainer.style.cssText = `
@@ -2340,11 +2342,14 @@
                         font-size: 12px;
                     `;
 
+                    // CORRECCIÓN: Acceder correctamente a los datos de certificación
+                    const certData = data['Certificación'];
+                    
                     const certificationContent = `
                         <div style="font-family: 'Arial', sans-serif; color: #36454F; line-height: 1.4; width: 100%;">
                             <div class="pdf-main-header">
                                 <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px; font-size: 18px;">
-                                    Certificación de Obras Nro. ${certificationNumber}
+                                    Certificación de Obras Nro. ${certData['Número de Certificación']}
                                 </h1>
                             </div>
                             
@@ -2353,11 +2358,11 @@
                                 <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Número de Certificación:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${data['Certificación']['Número de Certificación']}</td>
+                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${certData['Número de Certificación']}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Fecha de la Certificación:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${data['Certificación']['Fecha de Certificación']}</td>
+                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Fecha de Certificación']}</td>
                                     </tr>
                                 </table>
                             </div>
@@ -2367,11 +2372,11 @@
                                 <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Empresa Contratista:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${data['Certificación']['Empresa Contratista']}</td>
+                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${certData['Empresa Contratista']}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Identificación Fiscal RIF:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${data['Certificación']['Identificación Fiscal RIF']}</td>
+                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Identificación Fiscal RIF']}</td>
                                     </tr>
                                 </table>
                             </div>
@@ -2381,15 +2386,15 @@
                                 <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Corresponde Orden de trabajo N°:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${data['Certificación']['Número de Certificación']}</td>
+                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${certData['Número de Certificación']}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Fechas de Inicio:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${data['Certificación']['Fecha de Inicio']}</td>
+                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Fecha de Inicio']}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Fin de la Obra:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${data['Certificación']['Fecha de Fin']}</td>
+                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Fecha de Fin']}</td>
                                     </tr>
                                 </table>
                             </div>
@@ -2399,11 +2404,11 @@
                                 <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Detalle:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE; white-space: pre-wrap; min-height: 100px;">${formatLongTextForPDF(data['Certificación']['Detalle de Trabajos Realizados'], 70)}</td>
+                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE; white-space: pre-wrap; min-height: 100px;">${formatLongTextForPDF(certData['Detalle de Trabajos Realizados'], 70)}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Importe total de la obra:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${data['Certificación']['Importe Total de la Obra']}</td>
+                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Importe Total de la Obra']}</td>
                                     </tr>
                                 </table>
                             </div>
@@ -2413,7 +2418,7 @@
                                 <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                                     <tr>
                                         <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Detalle de desviaciones:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE; white-space: pre-wrap; min-height: 80px;">${formatLongTextForPDF(data['Certificación']['Desviaciones y Justificación'] || 'No se registraron desviaciones', 70)}</td>
+                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE; white-space: pre-wrap; min-height: 80px;">${formatLongTextForPDF(certData['Desviaciones y Justificación'] || 'No se registraron desviaciones', 70)}</td>
                                     </tr>
                                 </table>
                             </div>
@@ -2440,7 +2445,19 @@
                         margin: 10,
                         filename: fileName,
                         image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, logging: false },
+                        html2canvas: { 
+                            scale: 2, 
+                            useCORS: true, 
+                            logging: false,
+                            onclone: function(clonedDoc) {
+                                const clonedContainer = clonedDoc.getElementById('certification-pdf-container');
+                                if (clonedContainer) {
+                                    clonedContainer.style.position = 'relative';
+                                    clonedContainer.style.left = '0';
+                                    clonedContainer.style.top = '0';
+                                }
+                            }
+                        },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 
@@ -2450,12 +2467,14 @@
                             .from(printContainer)
                             .save()
                             .then(() => {
+                                console.log('PDF de certificación generado exitosamente:', fileName);
                                 if (document.body.contains(printContainer)) {
                                     document.body.removeChild(printContainer);
                                 }
                                 resolve();
                             })
                             .catch(error => {
+                                console.error('Error al generar PDF de certificación:', error);
                                 if (document.body.contains(printContainer)) {
                                     document.body.removeChild(printContainer);
                                 }
