@@ -647,7 +647,10 @@
           appId: "1:478774861151:web:e956dca23988e5d8fceaea"
         };
         
-        firebase.initializeApp(firebaseConfig);
+        // Verificar si Firebase ya está inicializado
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
         
         // Referencias a las "colecciones" de la base de datos
@@ -1168,13 +1171,16 @@
          */
         function getCurrentCaracasDate() {
             const now = new Date();
-            // Usamos las opciones de formato y la zona horaria de Caracas para forzar la fecha GMT-4.
-            return now.toLocaleDateString('es-ES', { 
-                timeZone: 'America/Caracas',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+            // Ajustar a zona horaria de Caracas (GMT-4)
+            const caracasOffset = -4 * 60; // minutos
+            const localOffset = now.getTimezoneOffset();
+            const caracasTime = new Date(now.getTime() + (localOffset - caracasOffset) * 60000);
+            
+            const day = String(caracasTime.getDate()).padStart(2, '0');
+            const month = String(caracasTime.getMonth() + 1).padStart(2, '0');
+            const year = caracasTime.getFullYear();
+            
+            return `${day}/${month}/${year}`;
         }
         
         /**
@@ -1203,65 +1209,109 @@
 
         // FUNCIÓN CORREGIDA: Ahora calcula correctamente ambos totales por separado
         function calculateNewTotal(prefix) {
-            // Cálculo para CANTV
-            const precioUnitario = parseFloat(document.getElementById(`${prefix}_precio_unitario`).value.replace(',', '.')) || 0;
-            const puntos = parseFloat(document.getElementById(`${prefix}_puntos`).value.replace(',', '.')) || 0;
-            const total = precioUnitario * puntos;
-            
-            document.getElementById(`${prefix}_total_display`).textContent = total.toFixed(2);
-            document.getElementById(`${prefix}_total_hidden`).value = total.toFixed(2);
-            
-            // Cálculo para EDC (usando los campos con sufijo "1")
-            const precioUnitario1 = parseFloat(document.getElementById(`${prefix}_precio_unitario1`).value.replace(',', '.')) || 0;
-            const puntos1 = parseFloat(document.getElementById(`${prefix}_puntos1`).value.replace(',', '.')) || 0;
-            const total1 = precioUnitario1 * puntos1;
-            
-            document.getElementById(`${prefix}_total_display1`).textContent = total1.toFixed(2);
-            document.getElementById(`${prefix}_total_hidden1`).value = total1.toFixed(2);
+            try {
+                // Cálculo para CANTV
+                const precioUnitario = parseFloat(
+                    (document.getElementById(`${prefix}_precio_unitario`).value || '0')
+                    .replace(',', '.')
+                ) || 0;
+                
+                const puntos = parseFloat(
+                    (document.getElementById(`${prefix}_puntos`).value || '0')
+                    .replace(',', '.')
+                ) || 0;
+                
+                const total = precioUnitario * puntos;
+                
+                // VERIFICAR QUE LOS ELEMENTOS EXISTAN
+                const totalDisplay = document.getElementById(`${prefix}_total_display`);
+                const totalHidden = document.getElementById(`${prefix}_total_hidden`);
+                
+                if (totalDisplay) totalDisplay.textContent = total.toFixed(2);
+                if (totalHidden) totalHidden.value = total.toFixed(2);
+                
+                // Cálculo para EDC
+                const precioUnitario1 = parseFloat(
+                    (document.getElementById(`${prefix}_precio_unitario1`).value || '0')
+                    .replace(',', '.')
+                ) || 0;
+                
+                const puntos1 = parseFloat(
+                    (document.getElementById(`${prefix}_puntos1`).value || '0')
+                    .replace(',', '.')
+                ) || 0;
+                
+                const total1 = precioUnitario1 * puntos1;
+                
+                const totalDisplay1 = document.getElementById(`${prefix}_total_display1`);
+                const totalHidden1 = document.getElementById(`${prefix}_total_hidden1`);
+                
+                if (totalDisplay1) totalDisplay1.textContent = total1.toFixed(2);
+                if (totalHidden1) totalHidden1.value = total1.toFixed(2);
+                
+            } catch (error) {
+                console.error('Error en calculateNewTotal:', error);
+            }
         }
 
 
         function toggleConditionalSection(type) {
-            const nodeAccessSection = document.getElementById('conditional_node_acceso_section');
-            const ispSection = document.getElementById('conditional_isp_section');
-            const nodeAccessButton = document.getElementById('check_node_acceso');
-            const ispButton = document.getElementById('check_isp');
+            try {
+                const nodeAccessSection = document.getElementById('conditional_node_acceso_section');
+                const ispSection = document.getElementById('conditional_isp_section');
+                const nodeAccessButton = document.getElementById('check_node_acceso');
+                const ispButton = document.getElementById('check_isp');
 
-            // 1. Limpiar y resetear ambas secciones
-            nodeAccessSection.style.display = 'none';
-            ispSection.style.display = 'none';
-            nodeAccessButton.classList.remove('active');
-            ispButton.classList.remove('active');
-            
-            // 2. Resetear inputs y selecciones
-            
-            const fieldsToReset = ['costo_proyectado', 'precio_unitario', 'puntos', 'precio_unitario1', 'puntos1', 'descripcion', 'abono_mensual'];
-            const selectsToReset = ['pago_por_realizado'];
+                // VERIFICAR QUE LOS ELEMENTOS EXISTAN
+                if (!nodeAccessSection || !ispSection || !nodeAccessButton || !ispButton) {
+                    console.error('Elementos de sección condicional no encontrados');
+                    return;
+                }
 
-            ['node_acceso', 'isp'].forEach(prefix => {
-                fieldsToReset.forEach(field => {
-                    const el = document.getElementById(`${prefix}_${field}`);
-                    if (el) el.value = '';
-                });
-                selectsToReset.forEach(field => {
-                    const el = document.getElementById(`${prefix}_${field}`);
-                    if (el) el.value = 'Inter'; // Valor por defecto
-                });
+                // 1. Limpiar y resetear ambas secciones
+                nodeAccessSection.style.display = 'none';
+                ispSection.style.display = 'none';
+                nodeAccessButton.classList.remove('active');
+                ispButton.classList.remove('active');
                 
-                document.getElementById(`${prefix}_total_display`).textContent = '0.00';
-                document.getElementById(`${prefix}_total_display1`).textContent = '0.00';
-                document.getElementById(`${prefix}_total_hidden`).value = '0.00';
-                document.getElementById(`${prefix}_total_hidden1`).value = '0.00';
-            });
+                // 2. Resetear inputs y selecciones
+                
+                const fieldsToReset = ['costo_proyectado', 'precio_unitario', 'puntos', 'precio_unitario1', 'puntos1', 'descripcion', 'abono_mensual'];
+                const selectsToReset = ['pago_por_realizado'];
+
+                ['node_acceso', 'isp'].forEach(prefix => {
+                    fieldsToReset.forEach(field => {
+                        const el = document.getElementById(`${prefix}_${field}`);
+                        if (el) el.value = '';
+                    });
+                    selectsToReset.forEach(field => {
+                        const el = document.getElementById(`${prefix}_${field}`);
+                        if (el) el.value = 'Inter'; // Valor por defecto
+                    });
+                    
+                    // Verificar que existan antes de intentar acceder
+                    const totalDisplay = document.getElementById(`${prefix}_total_display`);
+                    const totalDisplay1 = document.getElementById(`${prefix}_total_display1`);
+                    const totalHidden = document.getElementById(`${prefix}_total_hidden`);
+                    const totalHidden1 = document.getElementById(`${prefix}_total_hidden1`);
+                    
+                    if (totalDisplay) totalDisplay.textContent = '0.00';
+                    if (totalDisplay1) totalDisplay1.textContent = '0.00';
+                    if (totalHidden) totalHidden.value = '0.00';
+                    if (totalHidden1) totalHidden1.value = '0.00';
+                });
 
 
-            // 3. Mostrar la sección seleccionada
-            if (type === 'node_acceso') {
-                nodeAccessSection.style.display = 'block';
-                nodeAccessButton.classList.add('active');
-            } else if (type === 'isp') {
-                ispSection.style.display = 'block';
-                ispButton.classList.add('active');
+                // 3. Mostrar la sección seleccionada
+                if (type === 'node_acceso') {
+                    nodeAccessSection.style.display = 'block';
+                    nodeAccessButton.classList.add('active');
+                } else if (type === 'isp') {
+                    ispSection.style.display = 'block';
+                    ispButton.classList.add('active');
+                }
+            } catch (error) {
+                console.error('Error en toggleConditionalSection:', error);
             }
         }
 
@@ -1506,7 +1556,14 @@
                     document.getElementById(`${prefix}_abono_mensual`)
                 ];
 
+                // VERIFICAR QUE LOS ELEMENTOS EXISTAN
                 for (const campo of camposCondicionales) {
+                    if (!campo) {
+                        console.error(`Campo condicional no encontrado: ${prefix}`);
+                        firstInvalidField = document.getElementById(`check_${prefix}`);
+                        break;
+                    }
+                    
                     if (campo.type === 'text' || campo.type === 'select' || campo.tagName === 'TEXTAREA' || campo.type === 'date') {
                         if (!campo.value.trim()) {
                             firstInvalidField = campo;
@@ -2315,150 +2372,198 @@
         }
 
         /**
-         * Genera el PDF de certificación de obras - CORREGIDO
+         * SOLUCIÓN ROBUSTA: Genera el PDF de certificación de obras
          */
         function generateCertificationPDF(data) {
             return new Promise((resolve, reject) => {
                 try {
-                    const certificationNumber = data['Certificación']['Número de Certificación'];
-                    const fileName = `Certificacion_Obra_${certificationNumber}_${getCurrentCaracasDate().replace(/\//g, '-')}.pdf`;
+                    const certificationNumber = data['Orden de Trabajo'];
+                    const fileName = `Certificacion_Obra_${certificationNumber}.pdf`;
                     
                     console.log('Generando PDF de certificación para orden:', certificationNumber);
-                    console.log('Datos de certificación:', data['Certificación']);
+                    console.log('Datos completos:', data);
 
-                    const printContainer = document.createElement('div');
-                    printContainer.id = 'certification-pdf-container';
-                    printContainer.style.cssText = `
-                        position: absolute;
-                        left: -9999px;
-                        top: 0;
-                        width: 190mm;
-                        min-height: 277mm;
-                        background: white;
-                        padding: 10mm;
-                        font-family: Arial, sans-serif;
-                        box-sizing: border-box;
-                        line-height: 1.4;
-                        font-size: 12px;
-                    `;
-
-                    // CORRECCIÓN: Acceder correctamente a los datos de certificación
-                    const certData = data['Certificación'];
-                    
+                    // Crear contenido HTML completo y autónomo
                     const certificationContent = `
-                        <div style="font-family: 'Arial', sans-serif; color: #36454F; line-height: 1.4; width: 100%;">
-                            <div class="pdf-main-header">
-                                <h1 style="color: #4682B4; text-align: center; border-bottom: 2px solid #4682B4; padding-bottom: 10px; margin-bottom: 20px; font-size: 18px;">
-                                    Certificación de Obras Nro. ${certData['Número de Certificación']}
-                                </h1>
-                            </div>
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="UTF-8">
+                            <style>
+                                body { 
+                                    font-family: Arial, sans-serif; 
+                                    margin: 20px; 
+                                    color: #36454F; 
+                                    line-height: 1.4;
+                                    background: white;
+                                }
+                                h1 { 
+                                    color: #4682B4; 
+                                    text-align: center; 
+                                    border-bottom: 2px solid #4682B4; 
+                                    padding-bottom: 10px; 
+                                    margin-bottom: 20px; 
+                                }
+                                .section { 
+                                    margin-bottom: 25px; 
+                                    page-break-inside: avoid;
+                                }
+                                .section h3 { 
+                                    color: #4682B4; 
+                                    border-left: 4px solid #4682B4; 
+                                    padding-left: 8px; 
+                                    margin-top: 0;
+                                }
+                                table { 
+                                    width: 100%; 
+                                    border-collapse: collapse; 
+                                    margin-top: 10px;
+                                }
+                                td { 
+                                    padding: 10px; 
+                                    border: 1px solid #B0C4DE; 
+                                    vertical-align: top;
+                                }
+                                .label { 
+                                    font-weight: bold; 
+                                    background-color: #F0F8FF; 
+                                    width: 35%; 
+                                }
+                                .signature-section {
+                                    margin-top: 50px;
+                                    padding-top: 20px;
+                                    border-top: 2px dashed #B0C4DE;
+                                }
+                                .signature-box {
+                                    display: inline-block;
+                                    width: 45%;
+                                    margin: 0 2.5%;
+                                    text-align: center;
+                                }
+                                .signature-line {
+                                    border-bottom: 1px solid #000;
+                                    margin-top: 60px;
+                                    height: 1px;
+                                }
+                                @media print {
+                                    body { margin: 15mm; }
+                                    .section { page-break-inside: avoid; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>Certificación de Obras Nro. ${certificationNumber}</h1>
                             
-                            <div class="form-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #4682B4; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">I. Datos de Certificación</h3>
-                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <div class="section">
+                                <h3>I. Datos de Certificación</h3>
+                                <table>
                                     <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Número de Certificación:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${certData['Número de Certificación']}</td>
+                                        <td class="label">Número de Certificación:</td>
+                                        <td>${certificationNumber}</td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Fecha de la Certificación:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Fecha de Certificación']}</td>
+                                        <td class="label">Fecha de la Certificación:</td>
+                                        <td>${data['Certificación']?.['Fecha de Certificación'] || data['Fecha de Finalización'] || getCurrentCaracasDate()}</td>
                                     </tr>
                                 </table>
                             </div>
                             
-                            <div class="form-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #4682B4; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">II. Identificación</h3>
-                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <div class="section">
+                                <h3>II. Identificación</h3>
+                                <table>
                                     <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Empresa Contratista:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${certData['Empresa Contratista']}</td>
+                                        <td class="label">Empresa Contratista:</td>
+                                        <td>${data['Certificación']?.['Empresa Contratista'] || 'No especificada'}</td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Identificación Fiscal RIF:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Identificación Fiscal RIF']}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                            
-                            <div class="form-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #4682B4; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">III. Información del Proyecto</h3>
-                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                                    <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Corresponde Orden de trabajo N°:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE;">${certData['Número de Certificación']}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Fechas de Inicio:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Fecha de Inicio']}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Fin de la Obra:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Fecha de Fin']}</td>
+                                        <td class="label">Identificación Fiscal RIF:</td>
+                                        <td>${data['Certificación']?.['Identificación Fiscal RIF'] || 'No especificado'}</td>
                                     </tr>
                                 </table>
                             </div>
                             
-                            <div class="form-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #4682B4; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">IV. Detalle de los trabajos realizados</h3>
-                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <div class="section">
+                                <h3>III. Información del Proyecto</h3>
+                                <table>
                                     <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Detalle:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE; white-space: pre-wrap; min-height: 100px;">${formatLongTextForPDF(certData['Detalle de Trabajos Realizados'], 70)}</td>
+                                        <td class="label">Corresponde Orden de trabajo N°:</td>
+                                        <td>${certificationNumber}</td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; border: 1px solid #B0C4DE;">Importe total de la obra:</td>
-                                        <td style="padding: 8px 6px; border: 1px solid #B0C4DE;">${certData['Importe Total de la Obra']}</td>
+                                        <td class="label">Fechas de Inicio:</td>
+                                        <td>${data['Certificación']?.['Fecha de Inicio'] || 'No especificada'}</td>
                                     </tr>
-                                </table>
-                            </div>
-                            
-                            <div class="form-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #4682B4; border-left: 4px solid #4682B4; padding-left: 8px; font-size: 14px;">V. Desviaciones y Justificación</h3>
-                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                                     <tr>
-                                        <td style="padding: 8px 6px; font-weight: bold; background-color: #F0F8FF; width: 35%; border: 1px solid #B0C4DE;">Detalle de desviaciones:</td>
-                                        <td style="padding: 8px 6px; width: 65%; border: 1px solid #B0C4DE; white-space: pre-wrap; min-height: 80px;">${formatLongTextForPDF(certData['Desviaciones y Justificación'] || 'No se registraron desviaciones', 70)}</td>
+                                        <td class="label">Fin de la Obra:</td>
+                                        <td>${data['Certificación']?.['Fecha de Fin'] || 'No especificada'}</td>
                                     </tr>
                                 </table>
                             </div>
                             
-                            <div style="margin-top: 60px; padding-top: 30px; border-top: 2px dashed #B0C4DE;">
-                                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold;">
-                                    <div style="width: 45%;">
-                                        Firma Jefe Técnico (Firma/Sello)
-                                        <div style="border-top: 1px solid #36454F; margin-top: 40px;"></div>
-                                    </div>
-                                    <div style="width: 45%;">
-                                        Firma Gerente Técnico (Firma/Sello)
-                                        <div style="border-top: 1px solid #36454F; margin-top: 40px;"></div>
-                                    </div>
+                            <div class="section">
+                                <h3>IV. Detalle de los trabajos realizados</h3>
+                                <table>
+                                    <tr>
+                                        <td class="label">Detalle:</td>
+                                        <td style="white-space: pre-wrap; min-height: 100px;">${data['Certificación']?.['Detalle de Trabajos Realizados'] || 'No se especificaron detalles'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Importe total de la obra:</td>
+                                        <td>${data['Certificación']?.['Importe Total de la Obra'] || 'No especificado'}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div class="section">
+                                <h3>V. Desviaciones y Justificación</h3>
+                                <table>
+                                    <tr>
+                                        <td class="label">Detalle de desviaciones:</td>
+                                        <td style="white-space: pre-wrap; min-height: 80px;">${data['Certificación']?.['Desviaciones y Justificación'] || 'No se registraron desviaciones'}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div class="signature-section">
+                                <div class="signature-box">
+                                    <strong>Firma Jefe Técnico (Firma/Sello)</strong>
+                                    <div class="signature-line"></div>
+                                </div>
+                                <div class="signature-box">
+                                    <strong>Firma Gerente Técnico (Firma/Sello)</strong>
+                                    <div class="signature-line"></div>
                                 </div>
                             </div>
-                        </div>
+                        </body>
+                        </html>
                     `;
 
+                    const printContainer = document.createElement('div');
                     printContainer.innerHTML = certificationContent;
                     document.body.appendChild(printContainer);
 
                     const opt = {
                         margin: 10,
                         filename: fileName,
-                        image: { type: 'jpeg', quality: 0.98 },
+                        image: { 
+                            type: 'jpeg', 
+                            quality: 0.98 
+                        },
                         html2canvas: { 
-                            scale: 2, 
-                            useCORS: true, 
-                            logging: false,
+                            scale: 2,
+                            useCORS: true,
+                            logging: true,
+                            backgroundColor: '#FFFFFF',
                             onclone: function(clonedDoc) {
-                                const clonedContainer = clonedDoc.getElementById('certification-pdf-container');
-                                if (clonedContainer) {
-                                    clonedContainer.style.position = 'relative';
-                                    clonedContainer.style.left = '0';
-                                    clonedContainer.style.top = '0';
-                                }
+                                console.log('Documento clonado para PDF de certificación');
                             }
                         },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        jsPDF: { 
+                            unit: 'mm', 
+                            format: 'a4', 
+                            orientation: 'portrait',
+                            compress: true
+                        }
                     };
 
                     setTimeout(() => {
