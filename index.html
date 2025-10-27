@@ -923,12 +923,10 @@
                 
                 // Cargar Órdenes de Trabajo EN CURSO con ordenamiento
                 const ordersSnapshot = await ORDERS_COLLECTION.orderBy('Fecha Actual', 'desc').get();
-                // CORRECCIÓN: Usar asignación directa en lugar de push
                 workOrders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Cargar Órdenes de Trabajo FINALIZADAS con ordenamiento
                 const completedSnapshot = await COMPLETED_ORDERS_COLLECTION.orderBy('Fecha Actual', 'desc').get();
-                // CORRECCIÓN: Usar asignación directa en lugar de push
                 completedOrders = completedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Asegurar que el contador esté correcto al inicio
@@ -1023,9 +1021,6 @@
             document.getElementById('new-order-tab-button').style.display = isCreator ? 'inline-block' : 'none';
             
             await loadInitialData(); 
-            
-            // NUEVO: Configurar listeners en tiempo real
-            setupRealtimeListeners();
             
             if (role === 'admin') {
                 renderFormEditor();
@@ -2194,7 +2189,7 @@
             }
         }
 
-        // *** FUNCIÓN PARA ELIMINAR ÓRDENES FINALIZADAS - VERSIÓN CORREGIDA ***
+        // *** FUNCIÓN PARA ELIMINAR ÓRDENES FINALIZADAS ***
         async function deleteCompletedOrder(orderId, otNumber) {
             // Solo Administrador puede eliminar
             if (currentRole !== 'admin') {
@@ -2207,135 +2202,15 @@
             }
             
             try {
-                console.log(`Eliminando orden finalizada: ${orderId}, OT: ${otNumber}`);
-                
-                // 1. Eliminar de Firebase
                 await COMPLETED_ORDERS_COLLECTION.doc(orderId).delete();
-                
-                // 2. CORRECCIÓN: Actualizar el array local correctamente
-                // Crear un nuevo array sin la orden eliminada
-                const updatedOrders = completedOrders.filter(order => {
-                    const shouldKeep = order.id !== orderId;
-                    if (!shouldKeep) {
-                        console.log(`Removiendo orden del array local: ${order.id}`);
-                    }
-                    return shouldKeep;
-                });
-                
-                completedOrders = updatedOrders;
-                
-                console.log(`Array local actualizado. Total de órdenes: ${completedOrders.length}`);
-                
-                // 3. Actualizar la interfaz
+                completedOrders = completedOrders.filter(order => order.id !== orderId);
                 renderCompletedOrdersTable();
                 
                 alert(`✅ Orden Finalizada Nro. ${otNumber} eliminada permanentemente.`);
 
             } catch (e) {
                 console.error("Error al eliminar la orden finalizada:", e);
-                
-                let errorMessage = "Error al eliminar la Orden Finalizada de Firebase. ";
-                
-                if (e.code === 'permission-denied') {
-                    errorMessage += "Error de permisos. Verifique las reglas de seguridad de Firestore.";
-                } else if (e.code === 'not-found') {
-                    errorMessage += "La orden no fue encontrada en la base de datos.";
-                    // Si no se encuentra en Firebase, eliminarla del array local de todos modos
-                    completedOrders = completedOrders.filter(order => order.id !== orderId);
-                    renderCompletedOrdersTable();
-                } else {
-                    errorMessage += `Detalles: ${e.message}`;
-                }
-                
-                alert(errorMessage);
-            }
-        }
-
-        // *** FUNCIONES DE SINCRONIZACIÓN EN TIEMPO REAL ***
-
-        /**
-         * Configura listeners en tiempo real para sincronización
-         */
-        function setupRealtimeListeners() {
-            try {
-                // Escuchar cambios en órdenes finalizadas
-                COMPLETED_ORDERS_COLLECTION.onSnapshot((snapshot) => {
-                    console.log('Cambio detectado en órdenes finalizadas');
-                    
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'removed') {
-                            // Si se eliminó una orden, removerla del array local
-                            const deletedOrderId = change.doc.id;
-                            console.log(`Orden eliminada en tiempo real: ${deletedOrderId}`);
-                            
-                            completedOrders = completedOrders.filter(order => order.id !== deletedOrderId);
-                            
-                            // Actualizar la interfaz si estamos en la pestaña de órdenes finalizadas
-                            if (document.getElementById('completed-orders').style.display === 'block') {
-                                renderCompletedOrdersTable();
-                            }
-                        }
-                        if (change.type === 'added') {
-                            // Si se agregó una orden, agregarla al array local
-                            const newOrder = { id: change.doc.id, ...change.doc.data() };
-                            console.log(`Orden agregada en tiempo real: ${newOrder.id}`);
-                            
-                            // Verificar que no exista ya en el array
-                            if (!completedOrders.some(order => order.id === newOrder.id)) {
-                                completedOrders.push(newOrder);
-                                
-                                // Actualizar la interfaz si estamos en la pestaña de órdenes finalizadas
-                                if (document.getElementById('completed-orders').style.display === 'block') {
-                                    renderCompletedOrdersTable();
-                                }
-                            }
-                        }
-                        if (change.type === 'modified') {
-                            // Si se modificó una orden, actualizarla en el array local
-                            const modifiedOrder = { id: change.doc.id, ...change.doc.data() };
-                            const index = completedOrders.findIndex(order => order.id === modifiedOrder.id);
-                            if (index !== -1) {
-                                completedOrders[index] = modifiedOrder;
-                                
-                                // Actualizar la interfaz si estamos en la pestaña de órdenes finalizadas
-                                if (document.getElementById('completed-orders').style.display === 'block') {
-                                    renderCompletedOrdersTable();
-                                }
-                            }
-                        }
-                    });
-                }, (error) => {
-                    console.error("Error en listener de órdenes finalizadas:", error);
-                });
-
-                // Escuchar cambios en órdenes en curso (opcional)
-                ORDERS_COLLECTION.onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'removed') {
-                            const deletedOrderId = change.doc.id;
-                            workOrders = workOrders.filter(order => order.id !== deletedOrderId);
-                            
-                            if (document.getElementById('view-orders').style.display === 'block') {
-                                renderOrdersTable();
-                            }
-                        }
-                        if (change.type === 'added') {
-                            const newOrder = { id: change.doc.id, ...change.doc.data() };
-                            if (!workOrders.some(order => order.id === newOrder.id)) {
-                                workOrders.push(newOrder);
-                                
-                                if (document.getElementById('view-orders').style.display === 'block') {
-                                    renderOrdersTable();
-                                }
-                            }
-                        }
-                    });
-                }, (error) => {
-                    console.error("Error en listener de órdenes en curso:", error);
-                });
-
-            } catch (error) {
-                console.error("Error configurando listeners en tiempo real:", error);
+                alert("Error al eliminar la Orden Finalizada de Firebase. Detalles: " + e.message);
             }
         }
 
